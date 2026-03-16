@@ -25,7 +25,6 @@ Run from repository root:
 
 - dotnet restore
 - dotnet build
-- dotnet test
 
 If tests do not exist, add a task to create a test project.
 

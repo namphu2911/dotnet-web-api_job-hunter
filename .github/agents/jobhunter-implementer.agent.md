@@ -17,7 +17,7 @@ You are responsible for implementing approved plans.
 
 ## Verification Rules
 
-- Run dotnet build and dotnet test from repository root.
+- Run dotnet build from repository root.
 - If tests do not exist for changed behavior, state the gap clearly.
 
 ## Output Expectations

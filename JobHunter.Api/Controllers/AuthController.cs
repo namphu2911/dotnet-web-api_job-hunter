@@ -1,6 +1,7 @@
 using JobHunter.Application.Abstractions;
 using JobHunter.Application.Contracts.Auth;
 using JobHunter.Application.Contracts.Users;
+using JobHunter.Api.Attributes;
 using Microsoft.AspNetCore.Mvc;
 
 namespace JobHunter.Api.Controllers;
@@ -17,6 +18,7 @@ public sealed class AuthController : ControllerBase
     }
 
     [HttpPost("login")]
+    [ApiMessage("Login successfully")]
     [ProducesResponseType(typeof(ResLoginDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ResLoginDto>> Login([FromBody] ReqLoginDto request, CancellationToken cancellationToken)
@@ -32,6 +34,7 @@ public sealed class AuthController : ControllerBase
     }
 
     [HttpGet("account")]
+    [ApiMessage("Fetch account information")]
     [ProducesResponseType(typeof(ResLoginDto.UserGetAccountDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<ResLoginDto.UserGetAccountDto>> GetAccount(CancellationToken cancellationToken)
@@ -43,6 +46,7 @@ public sealed class AuthController : ControllerBase
     }
 
     [HttpGet("refresh")]
+    [ApiMessage("Refresh token successfully")]
     [ProducesResponseType(typeof(ResLoginDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ResLoginDto>> Refresh(CancellationToken cancellationToken)
@@ -59,6 +63,7 @@ public sealed class AuthController : ControllerBase
     }
 
     [HttpPost("logout")]
+    [ApiMessage("Logout successfully")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<ActionResult> Logout(CancellationToken cancellationToken)
     {
@@ -70,6 +75,7 @@ public sealed class AuthController : ControllerBase
     }
 
     [HttpPost("register")]
+    [ApiMessage("Register user successfully")]
     [ProducesResponseType(typeof(ResCreateUserDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<ActionResult<ResCreateUserDto>> Register([FromBody] ReqCreateUserDto request, CancellationToken cancellationToken)
@@ -86,6 +92,7 @@ public sealed class AuthController : ControllerBase
     }
 
     [HttpPost("change-password")]
+    [ApiMessage("Change password successfully")]
     [ProducesResponseType(typeof(ResLoginDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

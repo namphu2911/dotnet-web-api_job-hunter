@@ -1,5 +1,8 @@
 using System.Data.Common;
 using System.Text.Json;
+using JobHunter.Api.Contracts;
+using JobHunter.Application.Exceptions;
+using System.ComponentModel.DataAnnotations;
 
 namespace JobHunter.Api.Middleware;
 
@@ -34,26 +37,22 @@ public sealed class GlobalExceptionMiddleware
         var statusCode = exception switch
         {
             DbException => StatusCodes.Status503ServiceUnavailable,
+            PermissionException => StatusCodes.Status403Forbidden,
+            StorageException => StatusCodes.Status400BadRequest,
+            ValidationException => StatusCodes.Status400BadRequest,
+            BadHttpRequestException => StatusCodes.Status400BadRequest,
             UnauthorizedAccessException => StatusCodes.Status401Unauthorized,
             InvalidOperationException => StatusCodes.Status409Conflict,
             KeyNotFoundException => StatusCodes.Status404NotFound,
             _ => StatusCodes.Status500InternalServerError
         };
 
-        var response = new
-        {
-            statusCode,
-            message = statusCode switch
-            {
-                StatusCodes.Status503ServiceUnavailable => "Database is unavailable or credentials are invalid.",
-                StatusCodes.Status500InternalServerError => "An unexpected server error occurred.",
-                _ => exception.Message
-            }
-        };
+        var response = ApiErrorEnvelopeFactory.CreateFromException(exception, statusCode);
 
         context.Response.ContentType = "application/json";
         context.Response.StatusCode = statusCode;
 
         await context.Response.WriteAsync(JsonSerializer.Serialize(response, JsonOptions));
     }
+
 }

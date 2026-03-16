@@ -1,5 +1,6 @@
 using JobHunter.Application.Abstractions;
 using JobHunter.Application.Contracts.Users;
+using JobHunter.Api.Attributes;
 using Microsoft.AspNetCore.Mvc;
 
 namespace JobHunter.Api.Controllers;
@@ -16,6 +17,7 @@ public sealed class UsersController : ControllerBase
     }
 
     [HttpPost]
+    [ApiMessage("Create user successfully")]
     [ProducesResponseType(typeof(ResCreateUserDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<ActionResult<ResCreateUserDto>> CreateUser([FromBody] ReqCreateUserDto request, CancellationToken cancellationToken)
@@ -32,6 +34,7 @@ public sealed class UsersController : ControllerBase
     }
 
     [HttpDelete("{id:long}")]
+    [ApiMessage("Delete user successfully")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult> DeleteUser([FromRoute] long id, CancellationToken cancellationToken)
@@ -41,6 +44,7 @@ public sealed class UsersController : ControllerBase
     }
 
     [HttpGet("{id:long}")]
+    [ApiMessage("Fetch user successfully")]
     [ProducesResponseType(typeof(ResUserDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ResUserDto>> GetUserById([FromRoute] long id, CancellationToken cancellationToken)
@@ -50,6 +54,7 @@ public sealed class UsersController : ControllerBase
     }
 
     [HttpGet]
+    [ApiMessage("Fetch users successfully")]
     [ProducesResponseType(typeof(ResultPaginationDto<ResUserDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ResultPaginationDto<ResUserDto>>> GetUsers(
         [FromQuery] int page = 1,
@@ -61,6 +66,7 @@ public sealed class UsersController : ControllerBase
     }
 
     [HttpPut]
+    [ApiMessage("Update user successfully")]
     [ProducesResponseType(typeof(ResUpdateUserDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ResUpdateUserDto>> UpdateUser([FromBody] ReqUpdateUserDto request, CancellationToken cancellationToken)

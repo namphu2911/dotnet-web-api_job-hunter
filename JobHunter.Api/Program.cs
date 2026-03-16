@@ -1,10 +1,14 @@
 using JobHunter.Application;
 using JobHunter.Api.Authorization;
+using JobHunter.Api.Contracts;
+using JobHunter.Api.Filters;
 using JobHunter.Api.Middleware;
 using JobHunter.Infrastructure;
 using JobHunter.Infrastructure.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using System.Text;
@@ -12,8 +16,19 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddControllers(options =>
+    {
+        options.Filters.Add<ApiResponseEnvelopeFilter>();
+    })
+    .ConfigureApiBehaviorOptions(options =>
+    {
+        options.InvalidModelStateResponseFactory = context =>
+        {
+            var response = ApiErrorEnvelopeFactory.CreateFromModelState(context.ModelState);
 
-builder.Services.AddControllers();
+            return new BadRequestObjectResult(response);
+        };
+    });
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
@@ -97,10 +112,27 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(options =>
     {
         options.DefaultModelsExpandDepth(-1);
+        options.EnablePersistAuthorization();
     });
 }
 
 app.UseMiddleware<GlobalExceptionMiddleware>();
+
+var uploadBasePath = builder.Configuration["FileStorage:BasePath"];
+if (!string.IsNullOrWhiteSpace(uploadBasePath))
+{
+    var staticPath = Path.IsPathRooted(uploadBasePath)
+        ? uploadBasePath
+        : Path.Combine(app.Environment.ContentRootPath, uploadBasePath);
+
+    Directory.CreateDirectory(staticPath);
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new PhysicalFileProvider(staticPath),
+        RequestPath = "/storage"
+    });
+}
+
 app.UseCors(corsPolicy);
 app.UseHttpsRedirection();
 
