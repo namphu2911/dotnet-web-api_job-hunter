@@ -6,6 +6,7 @@ using JobHunter.Infrastructure.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,6 +16,23 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
+
+// Configure CORS policy to match Java implementation
+const string corsPolicy = "JobHunterCorsPolicy";
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(corsPolicy, policyBuilder =>
+    {
+        policyBuilder
+            .WithOrigins("http://localhost:3000", "http://localhost:4173", "http://localhost:5173")
+            .WithMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+            .WithHeaders("Authorization", "Content-Type", "Accept", "x-no-retry")
+            .AllowCredentials()
+            .WithExposedHeaders("Content-Disposition") // For file downloads
+            .SetIsOriginAllowedToAllowWildcardSubdomains()
+            .SetPreflightMaxAge(TimeSpan.FromSeconds(3600));
+    });
+});
 
 var jwtOptions = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>() ?? new JwtOptions();
 
@@ -42,9 +60,33 @@ builder.Services.AddAuthorization(options =>
 builder.Services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
 builder.Services.AddSingleton<IAuthorizationHandler, PermissionAuthorizationHandler>();
 
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+// Configure Swagger/OpenAPI
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    var bearerScheme = new OpenApiSecurityScheme
+    {
+        Description = "JWT access token. Example: Bearer {token}",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT"
+    };
+
+    options.AddSecurityDefinition("Bearer", bearerScheme);
+
+    var refreshTokenCookieScheme = new OpenApiSecurityScheme
+    {
+        Description = "Refresh token cookie value for refresh endpoint.",
+        Name = "refresh_token",
+        In = ParameterLocation.Cookie,
+        Type = SecuritySchemeType.ApiKey
+    };
+
+    options.AddSecurityDefinition("RefreshTokenCookie", refreshTokenCookieScheme);
+
+});
 
 var app = builder.Build();
 
@@ -52,10 +94,14 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(options =>
+    {
+        options.DefaultModelsExpandDepth(-1);
+    });
 }
 
 app.UseMiddleware<GlobalExceptionMiddleware>();
+app.UseCors(corsPolicy);
 app.UseHttpsRedirection();
 
 app.UseAuthentication();

@@ -2,7 +2,7 @@ using JobHunter.Domain.Enums;
 
 namespace JobHunter.Domain.Entities;
 
-public sealed class User
+public class User
 {
     public long Id { get; set; }
 
@@ -10,7 +10,7 @@ public sealed class User
 
     public string Email { get; set; } = string.Empty;
 
-    public string PasswordHash { get; set; } = string.Empty;
+    public string Password { get; set; } = string.Empty;
 
     public int Age { get; set; }
 
@@ -22,11 +22,22 @@ public sealed class User
 
     public string? RefreshToken { get; set; }
 
-    public DateTimeOffset CreatedAt { get; set; }
+    public DateTime CreatedAt { get; set; }
 
-    public DateTimeOffset? UpdatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
 
-    public NamedEntityReference? Company { get; set; }
+    public string? CreatedBy { get; set; }
 
-    public NamedEntityReference? Role { get; set; }
+    public string? UpdatedBy { get; set; }
+
+    // Foreign Keys
+    public long? CompanyId { get; set; }
+    public long? RoleId { get; set; }
+
+    // Navigation Properties
+    public Company? Company { get; set; }
+
+    public Role? Role { get; set; }
+
+    public ICollection<Resume> Resumes { get; } = new List<Resume>();
 }

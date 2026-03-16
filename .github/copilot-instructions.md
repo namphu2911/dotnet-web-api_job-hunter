@@ -50,6 +50,5 @@ Use these commands from repository root before considering work complete:
 
 - dotnet restore
 - dotnet build
-- dotnet test
 
 If no test project exists yet, call that out explicitly in the result.

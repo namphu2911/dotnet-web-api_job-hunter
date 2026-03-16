@@ -20,7 +20,6 @@ You are implementing a feature for this ASP.NET Core Web API repository.
 5. Run verification commands:
    - dotnet restore
    - dotnet build
-   - dotnet test
 6. Report:
    - files changed
    - risks

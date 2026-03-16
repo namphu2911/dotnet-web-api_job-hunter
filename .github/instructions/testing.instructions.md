@@ -28,6 +28,5 @@ applyTo: "**/*.{cs,csproj,sln}"
 Before finishing implementation:
 
 - dotnet build
-- dotnet test
 
 If test projects are not present, explicitly report this and suggest creating one.

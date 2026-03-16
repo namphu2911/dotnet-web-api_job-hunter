@@ -5,11 +5,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace JobHunter.Infrastructure.Repositories;
 
-public sealed class EfUserRepository : IUserRepository
+public sealed class UserRepository : IUserRepository
 {
     private readonly JobHunterDbContext _dbContext;
 
-    public EfUserRepository(JobHunterDbContext dbContext)
+    public UserRepository(JobHunterDbContext dbContext)
     {
         _dbContext = dbContext;
     }
@@ -49,7 +49,7 @@ public sealed class EfUserRepository : IUserRepository
 
     public async Task<User> AddAsync(User user, CancellationToken cancellationToken = default)
     {
-        user.CreatedAt = DateTimeOffset.UtcNow;
+        user.CreatedAt = DateTime.UtcNow;
         user.UpdatedAt = null;
 
         _dbContext.Users.Add(user);
@@ -67,15 +67,15 @@ public sealed class EfUserRepository : IUserRepository
 
         existing.Name = user.Name;
         existing.Email = user.Email;
-        existing.PasswordHash = user.PasswordHash;
+        existing.Password = user.Password;
         existing.Age = user.Age;
         existing.Gender = user.Gender;
         existing.Address = user.Address;
         existing.Avatar = user.Avatar;
-        existing.Company = user.Company;
-        existing.Role = user.Role;
+        existing.CompanyId = user.CompanyId;
+        existing.RoleId = user.RoleId;
         existing.RefreshToken = user.RefreshToken;
-        existing.UpdatedAt = DateTimeOffset.UtcNow;
+        existing.UpdatedAt = DateTime.UtcNow;
 
         await _dbContext.SaveChangesAsync(cancellationToken);
         return existing;
@@ -118,7 +118,7 @@ public sealed class EfUserRepository : IUserRepository
         }
 
         user.RefreshToken = refreshToken;
-        user.UpdatedAt = DateTimeOffset.UtcNow;
+        user.UpdatedAt = DateTime.UtcNow;
 
         await _dbContext.SaveChangesAsync(cancellationToken);
     }

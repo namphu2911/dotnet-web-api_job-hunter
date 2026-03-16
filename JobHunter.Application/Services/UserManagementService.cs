@@ -27,13 +27,14 @@ public sealed class UserManagementService : IUserManagementService
         {
             Name = request.Name ?? string.Empty,
             Email = request.Email,
-            PasswordHash = PasswordSecurity.HashPassword(request.Password),
+            Password = PasswordSecurity.HashPassword(request.Password),
             Age = request.Age,
             Gender = request.Gender,
             Address = request.Address,
             Avatar = "default-avatar.png",
-            Company = request.Company is null ? null : new NamedEntityReference { Id = request.Company.Id, Name = string.Empty },
-            Role = request.Role is null ? null : new NamedEntityReference { Id = request.Role.Id, Name = string.Empty }
+            CompanyId = request.Company?.Id,
+            RoleId = request.Role?.Id,
+            CreatedAt = DateTime.UtcNow
         };
 
         var created = await _userRepository.AddAsync(user, cancellationToken);
@@ -53,8 +54,9 @@ public sealed class UserManagementService : IUserManagementService
         existing.Gender = request.Gender;
         existing.Address = request.Address;
         existing.Avatar = request.Avatar;
-        existing.Company = request.Company is null ? null : new NamedEntityReference { Id = request.Company.Id, Name = string.Empty };
-        existing.Role = request.Role is null ? existing.Role : new NamedEntityReference { Id = request.Role.Id, Name = string.Empty };
+        existing.CompanyId = request.Company?.Id;
+        existing.RoleId = request.Role?.Id;
+        existing.UpdatedAt = DateTime.UtcNow;
 
         var updated = await _userRepository.UpdateAsync(existing, cancellationToken);
         return updated is null ? null : MapUpdateUser(updated);
@@ -106,8 +108,8 @@ public sealed class UserManagementService : IUserManagementService
             Avatar = user.Avatar,
             CreatedAt = user.CreatedAt,
             UpdatedAt = user.UpdatedAt,
-            Company = MapReference(user.Company),
-            Role = MapReference(user.Role)
+            Company = user.Company is null ? null : new ResObjectIdNameDto { Id = user.Company.Id, Name = user.Company.Name },
+            Role = user.Role is null ? null : new ResObjectIdNameDto { Id = user.Role.Id, Name = user.Role.Name }
         };
     }
 
@@ -122,7 +124,7 @@ public sealed class UserManagementService : IUserManagementService
             Gender = user.Gender,
             Address = user.Address,
             CreatedAt = user.CreatedAt,
-            Company = MapReference(user.Company)
+            Company = user.Company is null ? null : new ResObjectIdNameDto { Id = user.Company.Id, Name = user.Company.Name }
         };
     }
 
@@ -137,18 +139,7 @@ public sealed class UserManagementService : IUserManagementService
             Address = user.Address,
             Avatar = user.Avatar,
             UpdatedAt = user.UpdatedAt,
-            Company = MapReference(user.Company)
+            Company = user.Company is null ? null : new ResObjectIdNameDto { Id = user.Company.Id, Name = user.Company.Name }
         };
-    }
-
-    private static ResObjectIdNameDto? MapReference(NamedEntityReference? reference)
-    {
-        return reference is null
-            ? null
-            : new ResObjectIdNameDto
-            {
-                Id = reference.Id,
-                Name = reference.Name
-            };
     }
 }

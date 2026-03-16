@@ -22,7 +22,7 @@ public sealed class AuthService : IAuthService
     public async Task<ResLoginDto?> LoginAsync(ReqLoginDto request, CancellationToken cancellationToken = default)
     {
         var user = await _userRepository.GetByEmailAsync(request.Username, cancellationToken);
-        if (user is null || !PasswordSecurity.VerifyPassword(request.Password, user.PasswordHash))
+        if (user is null || !PasswordSecurity.VerifyPassword(request.Password, user.Password))
         {
             return null;
         }
@@ -111,12 +111,12 @@ public sealed class AuthService : IAuthService
         }
 
         var user = await _userRepository.GetByEmailAsync(email, cancellationToken);
-        if (user is null || !PasswordSecurity.VerifyPassword(request.OldPassword, user.PasswordHash))
+        if (user is null || !PasswordSecurity.VerifyPassword(request.OldPassword, user.Password))
         {
             return null;
         }
 
-        user.PasswordHash = PasswordSecurity.HashPassword(request.NewPassword);
+        user.Password = PasswordSecurity.HashPassword(request.NewPassword);
         var newRefreshToken = _jwtTokenService.CreateRefreshToken(user);
         var newAccessToken = _jwtTokenService.CreateAccessToken(user, ResolvePermissions(user));
 

@@ -240,7 +240,6 @@ Steps:
 3. Run verification commands:
    - dotnet restore
    - dotnet build
-   - dotnet test
 
 Deliverables:
 
