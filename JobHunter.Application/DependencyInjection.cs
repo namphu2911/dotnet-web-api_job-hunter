@@ -14,6 +14,11 @@ public static class DependencyInjection
         services.AddScoped<ISkillService, SkillService>();
         services.AddScoped<IPermissionService, PermissionService>();
         services.AddScoped<IRoleService, RoleService>();
+        services.AddScoped<IJobService, JobService>();
+        services.AddScoped<IResumeService, ResumeService>();
+        services.AddScoped<ISubscriberService, SubscriberService>();
+        services.AddScoped<IFileService, FileService>();
+        services.AddScoped<IEmailService, EmailService>();
         return services;
     }
 }

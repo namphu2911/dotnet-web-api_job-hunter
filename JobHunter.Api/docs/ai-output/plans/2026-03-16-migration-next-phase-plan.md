@@ -80,6 +80,7 @@ Test impact:
 - Resume sau Job/User.
 - Subscriber sau Skill.
 - Mỗi cụm hoàn thành đủ repository + service + controller + DTO + auth.
+- Migrate logic xử lý từ src (Java) sang .NET
 
 Test impact:
 

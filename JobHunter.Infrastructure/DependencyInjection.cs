@@ -32,6 +32,8 @@ public static class DependencyInjection
         services.AddScoped<IPermissionRepository, PermissionRepository>();
         services.AddScoped<IRoleRepository, RoleRepository>();
         services.AddScoped<ISubscriberRepository, SubscriberRepository>();
+        services.AddHostedService<EmailJobHostedService>();
+        services.AddHostedService<DatabaseSeeder>();
         return services;
     }
 
