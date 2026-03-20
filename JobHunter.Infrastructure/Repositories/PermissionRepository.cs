@@ -18,6 +18,7 @@ public sealed class PermissionRepository : IPermissionRepository
     {
         return await _dbContext.Permissions
             .AsNoTracking()
+            .Include(p => p.Roles)
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
     }
 

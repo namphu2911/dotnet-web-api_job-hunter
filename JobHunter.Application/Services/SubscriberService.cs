@@ -16,6 +16,12 @@ public class SubscriberService : ISubscriberService
         _skillRepository = skillRepository;
     }
 
+    public async Task<List<SubscriberDto>> GetAllAsync(CancellationToken cancellationToken = default)
+    {
+        var all = await _subscriberRepository.GetAllAsync(cancellationToken);
+        return all.Select(MapToDto).ToList();
+    }
+
     public async Task<long> CreateAsync(ReqCreateSubscriberDto dto, CancellationToken cancellationToken = default)
     {
         // Check if email exists

@@ -157,11 +157,21 @@ public sealed class AuthService : IAuthService
 
     private static IReadOnlyCollection<string> ResolvePermissions(JobHunter.Domain.Entities.User user)
     {
-        if (string.Equals(user.Role?.Name, "ADMIN", StringComparison.OrdinalIgnoreCase))
+        // Grant wildcard for both ADMIN and SUPER_ADMIN
+        if (string.Equals(user.Role?.Name, "ADMIN", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(user.Role?.Name, "SUPER_ADMIN", StringComparison.OrdinalIgnoreCase))
         {
             return new[] { "*" };
         }
 
+        // Otherwise, return permissions from role
+        if (user.Role?.Permissions != null && user.Role.Permissions.Count > 0)
+        {
+            return user.Role.Permissions.Select(p => p.ApiPath?.Trim() ?? string.Empty)
+                .Where(s => !string.IsNullOrEmpty(s))
+                .Distinct()
+                .ToArray();
+        }
         return Array.Empty<string>();
     }
 

@@ -25,8 +25,34 @@ public class EmailJobHostedService : BackgroundService
             {
                 using var scope = _serviceProvider.CreateScope();
                 var emailService = scope.ServiceProvider.GetRequiredService<IEmailService>();
-                // TODO: Replace with real logic to send job emails to subscribers
-                await emailService.SendSimpleEmailAsync("phunn.dev@gmail.com", "Scheduled Job", "This is a scheduled job email.", false, stoppingToken);
+                var subscriberService = scope.ServiceProvider.GetRequiredService<ISubscriberService>();
+                var jobRepository = scope.ServiceProvider.GetRequiredService<JobHunter.Domain.Repositories.IJobRepository>();
+
+                // Get all subscribers
+                var subscribers = await subscriberService.GetAllAsync(stoppingToken);
+                foreach (var subscriber in subscribers)
+                {
+                    if (subscriber.Skills == null || subscriber.Skills.Count == 0)
+                        continue;
+
+                    // Find jobs matching any of the subscriber's skills
+                    var jobs = await jobRepository.FindBySkillsAsync(subscriber.Skills, stoppingToken);
+
+                    if (jobs.Count == 0)
+                        continue;
+
+                    // Prepare job list for template
+                    var jobList = jobs.Select(j => new { JobName = j.Name, j.Location, j.Description, CompanyName = j.Company.Name }).ToList();
+
+                    // Send email using template (assume job.html exists)
+                    await emailService.SendEmailFromTemplateAsync(
+                        subscriber.Email,
+                        "New Jobs Matching Your Skills",
+                        "job.html",
+                        subscriber.Name,
+                        new { Jobs = jobList },
+                        stoppingToken);
+                }
             }
             catch (Exception ex)
             {

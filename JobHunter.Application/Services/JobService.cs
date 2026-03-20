@@ -36,13 +36,15 @@ public class JobService : IJobService
                 throw new InvalidOperationException("Some skills not found");
         }
 
+        if (!Enum.TryParse<Domain.Enums.Level>(dto.Level, true, out var lvl))
+            throw new InvalidOperationException($"Invalid level value: {dto.Level}");
         var job = new Job
         {
             Name = dto.Name,
             Location = dto.Location,
             Salary = (double)dto.Salary,
             Quantity = dto.Quantity,
-            Level = Enum.TryParse<Domain.Enums.Level>(dto.Level, true, out var lvl) ? lvl : Domain.Enums.Level.Unknown,
+            Level = lvl,
             Description = dto.Description,
             StartDate = dto.StartDate,
             EndDate = dto.EndDate,
@@ -68,7 +70,9 @@ public class JobService : IJobService
         job.Location = dto.Location;
         job.Salary = (double)dto.Salary;
         job.Quantity = dto.Quantity;
-        job.Level = Enum.TryParse<Domain.Enums.Level>(dto.Level, true, out var lvl) ? lvl : Domain.Enums.Level.Unknown;
+        if (!Enum.TryParse<Domain.Enums.Level>(dto.Level, true, out var lvl))
+            throw new InvalidOperationException($"Invalid level value: {dto.Level}");
+        job.Level = lvl;
         job.Description = dto.Description;
         job.StartDate = dto.StartDate;
         job.EndDate = dto.EndDate;
@@ -113,26 +117,14 @@ public class JobService : IJobService
 
     public async Task<ResultPaginationDto<ResJobDto>> GetListAsync(string? filter, int page, int pageSize, CancellationToken cancellationToken = default)
     {
-        // Simple filter: by name/location contains (case-insensitive)
-        var allJobs = await _jobRepository.GetAllAsync(cancellationToken);
-        IEnumerable<Job> filtered = allJobs;
-        if (!string.IsNullOrWhiteSpace(filter))
-        {
-            var f = filter.Trim().ToLowerInvariant();
-            filtered = filtered.Where(j =>
-                (j.Name != null && j.Name.ToLowerInvariant().Contains(f)) ||
-                (j.Location != null && j.Location.ToLowerInvariant().Contains(f)));
-        }
-        var total = filtered.Count();
-        var items = filtered.Skip((page - 1) * pageSize).Take(pageSize).ToList();
-        var result = new ResultPaginationDto<ResJobDto>
+        var (items, total) = await _jobRepository.GetPagedAsync(filter, page, pageSize, cancellationToken);
+        return new ResultPaginationDto<ResJobDto>
         {
             Page = page,
             PageSize = pageSize,
             Total = total,
             Items = items.Select(MapToResJobDto).ToList()
         };
-        return result;
     }
 
     private ResJobDto MapToResJobDto(Job job)
@@ -146,8 +138,8 @@ public class JobService : IJobService
             Quantity = job.Quantity,
             Level = job.Level.ToString(),
             Description = job.Description ?? string.Empty,
-            StartDate = job.StartDate ?? DateTime.MinValue,
-            EndDate = job.EndDate ?? DateTime.MinValue,
+            StartDate = job.StartDate,
+            EndDate = job.EndDate,
             Active = job.Active,
             CreatedAt = job.CreatedAt,
             CreatedBy = job.CreatedBy,

@@ -18,6 +18,8 @@ public sealed class RoleRepository : IRoleRepository
     {
         return await _dbContext.Roles
             .AsNoTracking()
+            .Include(r => r.Permissions)
+            .Include(r => r.Users)
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
     }
 

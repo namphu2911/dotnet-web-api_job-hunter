@@ -18,6 +18,8 @@ public sealed class SkillRepository : ISkillRepository
     {
         return await _dbContext.Skills
             .AsNoTracking()
+            .Include(s => s.Jobs)
+            .Include(s => s.Subscribers)
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
     }
 

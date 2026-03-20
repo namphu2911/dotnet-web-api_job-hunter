@@ -18,6 +18,8 @@ public sealed class CompanyRepository : ICompanyRepository
     {
         return await _dbContext.Companies
             .AsNoTracking()
+            .Include(c => c.Users)
+            .Include(c => c.Jobs)
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
     }
 

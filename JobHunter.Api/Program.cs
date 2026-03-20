@@ -1,3 +1,4 @@
+using Microsoft.OpenApi.Models;
 using JobHunter.Application;
 using JobHunter.Api.Authorization;
 using JobHunter.Api.Contracts;
@@ -10,7 +11,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -101,6 +101,21 @@ builder.Services.AddSwaggerGen(options =>
 
     options.AddSecurityDefinition("RefreshTokenCookie", refreshTokenCookieScheme);
 
+    // Add Bearer as a global security requirement
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] {}
+        }
+    });
 });
 
 var app = builder.Build();

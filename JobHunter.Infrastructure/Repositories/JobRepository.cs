@@ -14,9 +14,32 @@ public sealed class JobRepository : IJobRepository
         _dbContext = dbContext;
     }
 
+    public async Task<(List<Job> Items, int Total)> GetPagedAsync(string? filter, int page, int pageSize, CancellationToken cancellationToken = default)
+    {
+        var query = _dbContext.Jobs
+            .Include(j => j.Company)
+            .Include(j => j.Skills)
+            .AsNoTracking()
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(filter))
+        {
+            var f = filter.Trim().ToLowerInvariant();
+            query = query.Where(j =>
+                (j.Name != null && j.Name.ToLower().Contains(f)) ||
+                (j.Location != null && j.Location.ToLower().Contains(f)));
+        }
+
+        var total = await query.CountAsync(cancellationToken);
+        var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync(cancellationToken);
+        return (items, total);
+    }
+
     public async Task<Job?> GetByIdAsync(long id, CancellationToken cancellationToken = default)
     {
         return await _dbContext.Jobs
+            .Include(j => j.Company)
+            .Include(j => j.Skills)
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
     }
@@ -24,6 +47,8 @@ public sealed class JobRepository : IJobRepository
     public async Task<List<Job>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return await _dbContext.Jobs
+            .Include(j => j.Company)
+            .Include(j => j.Skills)
             .AsNoTracking()
             .ToListAsync(cancellationToken);
     }
@@ -50,11 +75,11 @@ public sealed class JobRepository : IJobRepository
         }
     }
 
-    public async Task<List<Job>> FindBySkillsAsync(IEnumerable<Skill> skills, CancellationToken cancellationToken = default)
+    public async Task<List<Job>> FindBySkillsAsync(IEnumerable<string> skills, CancellationToken cancellationToken = default)
     {
-        var skillIds = skills.Select(s => s.Id).ToList();
         return await _dbContext.Jobs
-            .Where(j => j.Skills.Any(s => skillIds.Contains(s.Id)))
+            .Include(j => j.Company)
+            .Where(j => j.Skills.Any(s => skills.Contains(s.Name)))
             .ToListAsync(cancellationToken);
     }
 }

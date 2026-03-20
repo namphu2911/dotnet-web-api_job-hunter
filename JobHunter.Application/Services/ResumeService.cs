@@ -31,11 +31,13 @@ public class ResumeService : IResumeService
         if (job == null)
             throw new InvalidOperationException($"Job with id {dto.Job} not found");
 
+        if (!Enum.TryParse<Domain.Enums.ResumeState>(dto.Status, true, out var st))
+            throw new InvalidOperationException($"Invalid status value: {dto.Status}");
         var resume = new Resume
         {
             Email = dto.Email,
             Url = dto.Url,
-            Status = Enum.TryParse<Domain.Enums.ResumeState>(dto.Status, true, out var st) ? st : Domain.Enums.ResumeState.Unknown,
+            Status = st,
             User = user,
             Job = job
         };
@@ -53,7 +55,9 @@ public class ResumeService : IResumeService
         var resume = await _resumeRepository.GetByIdAsync(dto.Id, cancellationToken);
         if (resume == null)
             throw new KeyNotFoundException($"Resume with id {dto.Id} not found");
-        resume.Status = Enum.TryParse<Domain.Enums.ResumeState>(dto.Status, true, out var st) ? st : Domain.Enums.ResumeState.Unknown;
+        if (!Enum.TryParse<Domain.Enums.ResumeState>(dto.Status, true, out var st))
+            throw new InvalidOperationException($"Invalid status value: {dto.Status}");
+        resume.Status = st;
         await _resumeRepository.UpdateAsync(resume, cancellationToken);
         return new ResUpdateResumeDto
         {
@@ -76,41 +80,26 @@ public class ResumeService : IResumeService
 
     public async Task<ResultPaginationDto<ResResumeDto>> GetListAsync(string? filter, int page, int pageSize, CancellationToken cancellationToken = default)
     {
-        var allResumes = await _resumeRepository.GetAllAsync(cancellationToken);
-        IEnumerable<Resume> filtered = allResumes;
-        if (!string.IsNullOrWhiteSpace(filter))
-        {
-            var f = filter.Trim().ToLowerInvariant();
-            filtered = filtered.Where(r =>
-                (r.Email != null && r.Email.ToLowerInvariant().Contains(f)) ||
-                (r.Job != null && r.Job.Name.ToLowerInvariant().Contains(f)));
-        }
-        var total = filtered.Count();
-        var items = filtered.Skip((page - 1) * pageSize).Take(pageSize).ToList();
-        var result = new ResultPaginationDto<ResResumeDto>
+        var (items, total) = await _resumeRepository.GetPagedAsync(filter, page, pageSize, cancellationToken);
+        return new ResultPaginationDto<ResResumeDto>
         {
             Page = page,
             PageSize = pageSize,
             Total = total,
             Items = items.Select(MapToResResumeDto).ToList()
         };
-        return result;
     }
 
     public async Task<ResultPaginationDto<ResResumeDto>> GetByUserAsync(long userId, int page, int pageSize, CancellationToken cancellationToken = default)
     {
-        var allResumes = await _resumeRepository.GetAllAsync(cancellationToken);
-        var filtered = allResumes.Where(r => r.UserId == userId);
-        var total = filtered.Count();
-        var items = filtered.Skip((page - 1) * pageSize).Take(pageSize).ToList();
-        var result = new ResultPaginationDto<ResResumeDto>
+        var (items, total) = await _resumeRepository.GetByUserPagedAsync(userId, page, pageSize, cancellationToken);
+        return new ResultPaginationDto<ResResumeDto>
         {
             Page = page,
             PageSize = pageSize,
             Total = total,
             Items = items.Select(MapToResResumeDto).ToList()
         };
-        return result;
     }
 
     private ResResumeDto MapToResResumeDto(Resume resume)

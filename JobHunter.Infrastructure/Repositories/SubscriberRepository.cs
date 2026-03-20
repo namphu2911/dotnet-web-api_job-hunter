@@ -17,6 +17,7 @@ public sealed class SubscriberRepository : ISubscriberRepository
     public async Task<Subscriber?> GetByIdAsync(long id, CancellationToken cancellationToken = default)
     {
         return await _dbContext.Subscribers
+            .Include(s => s.Skills)
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
     }
@@ -24,6 +25,7 @@ public sealed class SubscriberRepository : ISubscriberRepository
     public async Task<List<Subscriber>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return await _dbContext.Subscribers
+            .Include(s => s.Skills)
             .AsNoTracking()
             .ToListAsync(cancellationToken);
     }
@@ -57,6 +59,8 @@ public sealed class SubscriberRepository : ISubscriberRepository
 
     public async Task<Subscriber?> FindByEmailAsync(string email, CancellationToken cancellationToken = default)
     {
-        return await _dbContext.Subscribers.FirstOrDefaultAsync(x => x.Email == email, cancellationToken);
+        return await _dbContext.Subscribers
+            .Include(s => s.Skills)
+            .FirstOrDefaultAsync(x => x.Email == email, cancellationToken);
     }
 }

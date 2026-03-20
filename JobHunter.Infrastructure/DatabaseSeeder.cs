@@ -35,7 +35,45 @@ public class DatabaseSeeder : IHostedService
                 new Permission { Name = "Delete a company", ApiPath = "/api/v1/companies/{id}", Method = "DELETE", Module = "COMPANIES" },
                 new Permission { Name = "Get a company by id", ApiPath = "/api/v1/companies/{id}", Method = "GET", Module = "COMPANIES" },
                 new Permission { Name = "Get companies with pagination", ApiPath = "/api/v1/companies", Method = "GET", Module = "COMPANIES" },
-                // ... Add all other permissions as in Java seeder ...
+
+                new Permission { Name = "Create a job", ApiPath = "/api/v1/jobs", Method = "POST", Module = "JOBS" },
+                new Permission { Name = "Update a job", ApiPath = "/api/v1/jobs", Method = "PUT", Module = "JOBS" },
+                new Permission { Name = "Delete a job", ApiPath = "/api/v1/jobs/{id}", Method = "DELETE", Module = "JOBS" },
+                new Permission { Name = "Get a job by id", ApiPath = "/api/v1/jobs/{id}", Method = "GET", Module = "JOBS" },
+                new Permission { Name = "Get jobs with pagination", ApiPath = "/api/v1/jobs", Method = "GET", Module = "JOBS" },
+
+                new Permission { Name = "Create a permission", ApiPath = "/api/v1/permissions", Method = "POST", Module = "PERMISSIONS" },
+                new Permission { Name = "Update a permission", ApiPath = "/api/v1/permissions", Method = "PUT", Module = "PERMISSIONS" },
+                new Permission { Name = "Delete a permission", ApiPath = "/api/v1/permissions/{id}", Method = "DELETE", Module = "PERMISSIONS" },
+                new Permission { Name = "Get a permission by id", ApiPath = "/api/v1/permissions/{id}", Method = "GET", Module = "PERMISSIONS" },
+                new Permission { Name = "Get permissions with pagination", ApiPath = "/api/v1/permissions", Method = "GET", Module = "PERMISSIONS" },
+
+                new Permission { Name = "Create a resume", ApiPath = "/api/v1/resumes", Method = "POST", Module = "RESUMES" },
+                new Permission { Name = "Update a resume", ApiPath = "/api/v1/resumes", Method = "PUT", Module = "RESUMES" },
+                new Permission { Name = "Delete a resume", ApiPath = "/api/v1/resumes/{id}", Method = "DELETE", Module = "RESUMES" },
+                new Permission { Name = "Get a resume by id", ApiPath = "/api/v1/resumes/{id}", Method = "GET", Module = "RESUMES" },
+                new Permission { Name = "Get resumes with pagination", ApiPath = "/api/v1/resumes", Method = "GET", Module = "RESUMES" },
+
+                new Permission { Name = "Create a role", ApiPath = "/api/v1/roles", Method = "POST", Module = "ROLES" },
+                new Permission { Name = "Update a role", ApiPath = "/api/v1/roles", Method = "PUT", Module = "ROLES" },
+                new Permission { Name = "Delete a role", ApiPath = "/api/v1/roles/{id}", Method = "DELETE", Module = "ROLES" },
+                new Permission { Name = "Get a role by id", ApiPath = "/api/v1/roles/{id}", Method = "GET", Module = "ROLES" },
+                new Permission { Name = "Get roles with pagination", ApiPath = "/api/v1/roles", Method = "GET", Module = "ROLES" },
+
+                new Permission { Name = "Create a user", ApiPath = "/api/v1/users", Method = "POST", Module = "USERS" },
+                new Permission { Name = "Update a user", ApiPath = "/api/v1/users", Method = "PUT", Module = "USERS" },
+                new Permission { Name = "Delete a user", ApiPath = "/api/v1/users/{id}", Method = "DELETE", Module = "USERS" },
+                new Permission { Name = "Get a user by id", ApiPath = "/api/v1/users/{id}", Method = "GET", Module = "USERS" },
+                new Permission { Name = "Get users with pagination", ApiPath = "/api/v1/users", Method = "GET", Module = "USERS" },
+
+                new Permission { Name = "Create a subscriber", ApiPath = "/api/v1/subscribers", Method = "POST", Module = "SUBSCRIBERS" },
+                new Permission { Name = "Update a subscriber", ApiPath = "/api/v1/subscribers", Method = "PUT", Module = "SUBSCRIBERS" },
+                new Permission { Name = "Delete a subscriber", ApiPath = "/api/v1/subscribers/{id}", Method = "DELETE", Module = "SUBSCRIBERS" },
+                new Permission { Name = "Get a subscriber by id", ApiPath = "/api/v1/subscribers/{id}", Method = "GET", Module = "SUBSCRIBERS" },
+                new Permission { Name = "Get subscribers with pagination", ApiPath = "/api/v1/subscribers", Method = "GET", Module = "SUBSCRIBERS" },
+
+                new Permission { Name = "Download a file", ApiPath = "/api/v1/files", Method = "GET", Module = "FILES" },
+                new Permission { Name = "Upload a file", ApiPath = "/api/v1/files", Method = "POST", Module = "FILES" },
             };
             await db.Permissions.AddRangeAsync(permissions, cancellationToken);
             await db.SaveChangesAsync(cancellationToken);
@@ -70,7 +108,7 @@ public class DatabaseSeeder : IHostedService
                 Email = "admin@gmail.com",
                 Address = "hn",
                 Age = 25,
-                Gender = Gender.Male,
+                Gender = Gender.MALE,
                 Name = "I'm super admin",
                 Password = "123456", // TODO: Hash in production
                 Role = adminRole!

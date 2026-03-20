@@ -1,5 +1,6 @@
 using JobHunter.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using JobHunter.Infrastructure.Converters;
 
 namespace JobHunter.Infrastructure.Persistence;
 
@@ -96,7 +97,10 @@ public class JobHunterDbContext : DbContext
         user.HasIndex(x => x.Email).IsUnique();
         user.Property(x => x.Password).HasColumnName("password").HasMaxLength(400).IsRequired();
         user.Property(x => x.Age).HasColumnName("age");
-        user.Property(x => x.Gender).HasColumnName("gender").HasConversion<string>().HasMaxLength(10);
+        user.Property(x => x.Gender)
+            .HasColumnName("gender")
+            .HasConversion(new GenderEnumValueConverter())
+            .HasMaxLength(10);
         user.Property(x => x.Address).HasColumnName("address").HasMaxLength(300);
         user.Property(x => x.Avatar).HasColumnName("avatar").HasMaxLength(300);
         user.Property(x => x.RefreshToken).HasColumnName("refresh_token").HasColumnType("NVARCHAR(MAX)");
@@ -165,7 +169,10 @@ public class JobHunterDbContext : DbContext
         job.Property(x => x.Location).HasColumnName("location").HasMaxLength(300).IsRequired();
         job.Property(x => x.Salary).HasColumnName("salary");
         job.Property(x => x.Quantity).HasColumnName("quantity");
-        job.Property(x => x.Level).HasColumnName("level").HasConversion<string>().HasMaxLength(20);
+        job.Property(x => x.Level)
+            .HasColumnName("level")
+            .HasConversion(new LevelEnumValueConverter())
+            .HasMaxLength(20);
         job.Property(x => x.Description).HasColumnName("description").HasColumnType("NVARCHAR(MAX)");
         job.Property(x => x.StartDate).HasColumnName("start_date");
         job.Property(x => x.EndDate).HasColumnName("end_date");
@@ -209,7 +216,10 @@ public class JobHunterDbContext : DbContext
         resume.Property(x => x.Id).HasColumnName("id").ValueGeneratedOnAdd();
         resume.Property(x => x.Email).HasColumnName("email").HasMaxLength(150).IsRequired();
         resume.Property(x => x.Url).HasColumnName("url").HasMaxLength(500).IsRequired();
-        resume.Property(x => x.Status).HasColumnName("status").HasConversion<string>().HasMaxLength(20);
+        resume.Property(x => x.Status)
+            .HasColumnName("status")
+            .HasConversion(new ResumeStateEnumValueConverter())
+            .HasMaxLength(20);
         resume.Property(x => x.CreatedAt).HasColumnName("created_at").IsRequired();
         resume.Property(x => x.UpdatedAt).HasColumnName("updated_at");
         resume.Property(x => x.CreatedBy).HasColumnName("created_by").HasMaxLength(150);

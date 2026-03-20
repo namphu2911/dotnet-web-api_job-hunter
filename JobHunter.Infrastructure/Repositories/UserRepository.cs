@@ -24,6 +24,8 @@ public sealed class UserRepository : IUserRepository
     public async Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
     {
         return await _dbContext.Users
+            .Include(u => u.Role)
+            .ThenInclude(r => r.Permissions)
             .FirstOrDefaultAsync(x => x.Email == email, cancellationToken);
     }
 
