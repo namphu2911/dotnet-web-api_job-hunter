@@ -60,7 +60,7 @@ public sealed class JobRepository : IJobRepository
         if (skillInValues.Count > 0)
         {
             var skills = skillInValues.Select(v => v.ToUpperInvariant()).ToList();
-            query = query.Where(j => j.Skills.Any(s => skills.Contains(s.Name.ToUpper())));
+            query = query.Where(j => j.Skills.Any(s => skills.Contains(s.Id.ToString())));
         }
 
         query = ApplySort(query, sort);

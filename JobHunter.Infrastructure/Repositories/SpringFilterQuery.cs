@@ -53,14 +53,14 @@ internal static class SpringFilterQuery
             return Array.Empty<string>();
         }
 
-        var pattern = $@"\b{Regex.Escape(field)}\s+in\s*\(([^)]*)\)";
+        var pattern = $@"\b{Regex.Escape(field)}\s+in\s*(?:\(([^)]*)\)|\[([^\]]*)\])";
         var match = Regex.Match(input, pattern, RegexOptions.IgnoreCase);
         if (!match.Success)
         {
             return Array.Empty<string>();
         }
 
-        var raw = match.Groups[1].Value;
+        var raw = match.Groups[1].Success ? match.Groups[1].Value : match.Groups[2].Value;
         var values = Regex.Matches(raw, @"'([^']*)'|([^,\s]+)")
             .Select(m => m.Groups[1].Success ? m.Groups[1].Value : m.Groups[2].Value)
             .Select(v => v.Trim())

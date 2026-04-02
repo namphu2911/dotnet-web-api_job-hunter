@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +20,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers(options =>
     {
         options.Filters.Add<ApiResponseEnvelopeFilter>();
+    })
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
     })
     .ConfigureApiBehaviorOptions(options =>
     {
@@ -39,7 +44,13 @@ builder.Services.AddCors(options =>
     options.AddPolicy(corsPolicy, policyBuilder =>
     {
         policyBuilder
-            .WithOrigins("http://localhost:3000", "http://localhost:4173", "http://localhost:5173")
+            .WithOrigins(
+                "http://localhost:3000",
+                "https://localhost:3000",
+                "http://localhost:4173",
+                "https://localhost:4173",
+                "http://localhost:5173",
+                "https://localhost:5173")
             .WithMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
             .WithHeaders("Authorization", "Content-Type", "Accept", "x-no-retry")
             .AllowCredentials()
@@ -149,7 +160,11 @@ if (!string.IsNullOrWhiteSpace(uploadBasePath))
 }
 
 app.UseCors(corsPolicy);
-app.UseHttpsRedirection();
+
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
 app.UseAuthentication();
 app.UseAuthorization();
