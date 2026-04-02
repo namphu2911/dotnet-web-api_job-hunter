@@ -1,5 +1,7 @@
 using JobHunter.Application.Abstractions;
+using JobHunter.Application.Contracts;
 using JobHunter.Application.Contracts.Subscribers;
+using JobHunter.Application.Utilities;
 using JobHunter.Domain.Entities;
 using JobHunter.Domain.Repositories;
 
@@ -22,6 +24,13 @@ public class SubscriberService : ISubscriberService
         return all.Select(MapToDto).ToList();
     }
 
+    public async Task<ResultPaginationDto<SubscriberDto>> GetListAsync(string? filter, int page, int pageSize, string? sort, CancellationToken cancellationToken = default)
+    {
+        var (items, total) = await _subscriberRepository.GetPagedAsync(filter, page, pageSize, sort, cancellationToken);
+        var result = items.Select(MapToDto).ToList();
+        return ResultPaginationDto<SubscriberDto>.Create(result, page, pageSize, total);
+    }
+
     public async Task<long> CreateAsync(ReqCreateSubscriberDto dto, CancellationToken cancellationToken = default)
     {
         // Check if email exists
@@ -33,8 +42,9 @@ public class SubscriberService : ISubscriberService
         var skills = new List<Skill>();
         if (dto.Skills != null && dto.Skills.Count > 0)
         {
-            skills = await _skillRepository.FindByIdsAsync(dto.Skills, cancellationToken);
-            if (skills.Count != dto.Skills.Count)
+            var skillIds = FlexibleIdParser.ParseList(dto.Skills, "skills");
+            skills = await _skillRepository.FindByIdsAsync(skillIds, cancellationToken);
+            if (skills.Count != skillIds.Count)
                 throw new InvalidOperationException("Some skills not found");
         }
 
@@ -60,8 +70,9 @@ public class SubscriberService : ISubscriberService
         var skills = new List<Skill>();
         if (dto.Skills != null && dto.Skills.Count > 0)
         {
-            skills = await _skillRepository.FindByIdsAsync(dto.Skills, cancellationToken);
-            if (skills.Count != dto.Skills.Count)
+            var skillIds = FlexibleIdParser.ParseList(dto.Skills, "skills");
+            skills = await _skillRepository.FindByIdsAsync(skillIds, cancellationToken);
+            if (skills.Count != skillIds.Count)
                 throw new InvalidOperationException("Some skills not found");
         }
         subscriber.Skills.Clear();
@@ -69,6 +80,17 @@ public class SubscriberService : ISubscriberService
             subscriber.Skills.Add(skill);
 
         await _subscriberRepository.UpdateAsync(subscriber, cancellationToken);
+    }
+
+    public async Task DeleteAsync(long id, CancellationToken cancellationToken = default)
+    {
+        var subscriber = await _subscriberRepository.GetByIdAsync(id, cancellationToken);
+        if (subscriber == null)
+        {
+            throw new KeyNotFoundException($"Subscriber with id {id} not found");
+        }
+
+        await _subscriberRepository.DeleteAsync(id, cancellationToken);
     }
 
     public async Task<bool> ExistsByEmailAsync(string email, CancellationToken cancellationToken = default)

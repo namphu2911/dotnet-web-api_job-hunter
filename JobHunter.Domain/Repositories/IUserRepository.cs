@@ -10,9 +10,9 @@ public interface IUserRepository
 
     Task<bool> ExistsByEmailAsync(string email, CancellationToken cancellationToken = default);
 
-    Task<IReadOnlyList<User>> GetUsersAsync(int page, int pageSize, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<User>> GetUsersAsync(int page, int pageSize, string? filter, string? sort, CancellationToken cancellationToken = default);
 
-    Task<int> CountUsersAsync(CancellationToken cancellationToken = default);
+    Task<int> CountUsersAsync(string? filter, CancellationToken cancellationToken = default);
 
     Task<User> AddAsync(User user, CancellationToken cancellationToken = default);
 

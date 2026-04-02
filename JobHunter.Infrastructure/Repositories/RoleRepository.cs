@@ -23,11 +23,28 @@ public sealed class RoleRepository : IRoleRepository
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
     }
 
-    public async Task<List<Role>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<(List<Role> Items, int Total)> GetPagedAsync(string? filter, int page, int pageSize, string? sort, CancellationToken cancellationToken = default)
     {
-        return await _dbContext.Roles
+        var query = _dbContext.Roles
+            .Include(r => r.Permissions)
             .AsNoTracking()
+            .AsQueryable();
+
+        foreach (var value in SpringFilterQuery.GetContainsValues(filter, "name"))
+        {
+            var term = value.ToLowerInvariant();
+            query = query.Where(r => r.Name.ToLower().Contains(term));
+        }
+
+        query = ApplySort(query, sort);
+
+        var total = await query.CountAsync(cancellationToken);
+        var items = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync(cancellationToken);
+
+        return (items, total);
     }
 
     public async Task AddAsync(Role role, CancellationToken cancellationToken = default)
@@ -60,5 +77,21 @@ public sealed class RoleRepository : IRoleRepository
     public async Task<Role?> FindByNameAsync(string name, CancellationToken cancellationToken = default)
     {
         return await _dbContext.Roles.FirstOrDefaultAsync(x => x.Name == name, cancellationToken);
+    }
+
+    private static IQueryable<Role> ApplySort(IQueryable<Role> query, string? sort)
+    {
+        if (!SpringFilterQuery.TryParseSort(sort, out var field, out var desc))
+        {
+            return query.OrderByDescending(x => x.UpdatedAt ?? x.CreatedAt);
+        }
+
+        return field.ToLowerInvariant() switch
+        {
+            "name" => desc ? query.OrderByDescending(x => x.Name) : query.OrderBy(x => x.Name),
+            "createdat" => desc ? query.OrderByDescending(x => x.CreatedAt) : query.OrderBy(x => x.CreatedAt),
+            "updatedat" => desc ? query.OrderByDescending(x => x.UpdatedAt) : query.OrderBy(x => x.UpdatedAt),
+            _ => query.OrderByDescending(x => x.UpdatedAt ?? x.CreatedAt)
+        };
     }
 }

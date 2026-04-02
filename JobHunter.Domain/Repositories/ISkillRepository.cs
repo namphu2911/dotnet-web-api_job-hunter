@@ -8,7 +8,7 @@ namespace JobHunter.Domain.Repositories
     public interface ISkillRepository
     {
         Task<Skill?> GetByIdAsync(long id, CancellationToken cancellationToken = default);
-        Task<List<Skill>> GetAllAsync(CancellationToken cancellationToken = default);
+        Task<(List<Skill> Items, int Total)> GetPagedAsync(string? filter, int page, int pageSize, string? sort, CancellationToken cancellationToken = default);
         Task AddAsync(Skill skill, CancellationToken cancellationToken = default);
         Task UpdateAsync(Skill skill, CancellationToken cancellationToken = default);
         Task DeleteAsync(long id, CancellationToken cancellationToken = default);

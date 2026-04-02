@@ -8,7 +8,7 @@ namespace JobHunter.Domain.Repositories
     public interface IPermissionRepository
     {
         Task<Permission?> GetByIdAsync(long id, CancellationToken cancellationToken = default);
-        Task<List<Permission>> GetAllAsync(CancellationToken cancellationToken = default);
+        Task<(List<Permission> Items, int Total)> GetPagedAsync(string? filter, int page, int pageSize, string? sort, CancellationToken cancellationToken = default);
         Task AddAsync(Permission permission, CancellationToken cancellationToken = default);
         Task UpdateAsync(Permission permission, CancellationToken cancellationToken = default);
         Task DeleteAsync(long id, CancellationToken cancellationToken = default);

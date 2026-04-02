@@ -1,4 +1,4 @@
-namespace JobHunter.Application.Contracts.Users;
+namespace JobHunter.Application.Contracts;
 
 public sealed class ReqObjectIdDto
 {

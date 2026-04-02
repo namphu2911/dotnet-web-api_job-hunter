@@ -1,4 +1,5 @@
 using JobHunter.Application.Abstractions;
+using JobHunter.Application.Contracts;
 using JobHunter.Application.Contracts.Companies;
 using JobHunter.Domain.Entities;
 using JobHunter.Domain.Repositories;
@@ -52,9 +53,10 @@ namespace JobHunter.Application.Services
             return await _companyRepository.GetByIdAsync(id, cancellationToken);
         }
 
-        public async Task<List<Company>> GetCompaniesAsync(CancellationToken cancellationToken = default)
+        public async Task<ResultPaginationDto<Company>> GetListAsync(string? filter, int page, int pageSize, string? sort, CancellationToken cancellationToken = default)
         {
-            return await _companyRepository.GetAllAsync(cancellationToken);
+            var (items, total) = await _companyRepository.GetPagedAsync(filter, page, pageSize, sort, cancellationToken);
+            return ResultPaginationDto<Company>.Create(items, page, pageSize, total);
         }
     }
 }

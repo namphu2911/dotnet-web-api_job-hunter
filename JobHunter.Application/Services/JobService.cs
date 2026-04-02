@@ -1,6 +1,7 @@
 using JobHunter.Application.Abstractions;
 using JobHunter.Application.Contracts.Jobs;
 using JobHunter.Application.Contracts;
+using JobHunter.Application.Utilities;
 using JobHunter.Domain.Entities;
 using JobHunter.Domain.Repositories;
 
@@ -22,17 +23,20 @@ public class JobService : IJobService
 
     public async Task<ResJobDto> CreateAsync(ReqCreateJobDto dto, CancellationToken cancellationToken = default)
     {
+        var companyId = FlexibleIdParser.ParseRequired(dto.Company, "company");
+        var skillIds = FlexibleIdParser.ParseList(dto.Skills, "skills");
+
         // Validate company
-        var company = await _companyRepository.GetByIdAsync(dto.Company, cancellationToken);
+        var company = await _companyRepository.GetByIdAsync(companyId, cancellationToken);
         if (company == null)
-            throw new InvalidOperationException($"Company with id {dto.Company} not found");
+            throw new InvalidOperationException($"Company with id {companyId} not found");
 
         // Validate skills
         var skills = new List<Skill>();
-        if (dto.Skills != null && dto.Skills.Count > 0)
+        if (skillIds.Count > 0)
         {
-            skills = await _skillRepository.FindByIdsAsync(dto.Skills, cancellationToken);
-            if (skills.Count != dto.Skills.Count)
+            skills = await _skillRepository.FindByIdsAsync(skillIds, cancellationToken);
+            if (skills.Count != skillIds.Count)
                 throw new InvalidOperationException("Some skills not found");
         }
 
@@ -61,6 +65,9 @@ public class JobService : IJobService
 
     public async Task<ResJobDto> UpdateAsync(ReqUpdateJobDto dto, CancellationToken cancellationToken = default)
     {
+        var companyId = FlexibleIdParser.ParseRequired(dto.Company, "company");
+        var skillIds = FlexibleIdParser.ParseList(dto.Skills, "skills");
+
         var job = await _jobRepository.GetByIdAsync(dto.Id, cancellationToken);
         if (job == null)
             throw new KeyNotFoundException($"Job with id {dto.Id} not found");
@@ -79,17 +86,17 @@ public class JobService : IJobService
         job.Active = dto.Active;
 
         // Update company
-        var company = await _companyRepository.GetByIdAsync(dto.Company, cancellationToken);
+        var company = await _companyRepository.GetByIdAsync(companyId, cancellationToken);
         if (company == null)
-            throw new InvalidOperationException($"Company with id {dto.Company} not found");
+            throw new InvalidOperationException($"Company with id {companyId} not found");
         job.Company = company;
 
         // Update skills
         var skills = new List<Skill>();
-        if (dto.Skills != null && dto.Skills.Count > 0)
+        if (skillIds.Count > 0)
         {
-            skills = await _skillRepository.FindByIdsAsync(dto.Skills, cancellationToken);
-            if (skills.Count != dto.Skills.Count)
+            skills = await _skillRepository.FindByIdsAsync(skillIds, cancellationToken);
+            if (skills.Count != skillIds.Count)
                 throw new InvalidOperationException("Some skills not found");
         }
         job.Skills.Clear();
@@ -115,16 +122,11 @@ public class JobService : IJobService
     }
 
 
-    public async Task<ResultPaginationDto<ResJobDto>> GetListAsync(string? filter, int page, int pageSize, CancellationToken cancellationToken = default)
+    public async Task<ResultPaginationDto<ResJobDto>> GetListAsync(string? filter, int page, int pageSize, string? sort, CancellationToken cancellationToken = default)
     {
-        var (items, total) = await _jobRepository.GetPagedAsync(filter, page, pageSize, cancellationToken);
-        return new ResultPaginationDto<ResJobDto>
-        {
-            Page = page,
-            PageSize = pageSize,
-            Total = total,
-            Items = items.Select(MapToResJobDto).ToList()
-        };
+        var (items, total) = await _jobRepository.GetPagedAsync(filter, page, pageSize, sort, cancellationToken);
+        var result = items.Select(MapToResJobDto).ToList();
+        return ResultPaginationDto<ResJobDto>.Create(result, page, pageSize, total);
     }
 
     private ResJobDto MapToResJobDto(Job job)
@@ -145,7 +147,19 @@ public class JobService : IJobService
             CreatedBy = job.CreatedBy,
             UpdatedAt = job.UpdatedAt,
             UpdatedBy = job.UpdatedBy,
-            Skills = job.Skills?.Select(s => s.Name).ToList() ?? new List<string>()
+            Company = job.Company is null
+                ? null
+                : new ResJobDto.ResJobCompanyDto
+                {
+                    Id = job.Company.Id,
+                    Name = job.Company.Name,
+                    Logo = job.Company.Logo
+                },
+            Skills = job.Skills?.Select(s => new ResJobDto.ResJobSkillDto
+            {
+                Id = s.Id,
+                Name = s.Name
+            }).ToList() ?? new List<ResJobDto.ResJobSkillDto>()
         };
     }
 }

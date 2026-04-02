@@ -11,6 +11,6 @@ public class ReqCreateJobDto
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
     public bool Active { get; set; }
-    public List<long> Skills { get; set; } = new();
-    public long Company { get; set; }
+    public List<ReqObjectIdDto> Skills { get; set; } = new();
+    public ReqObjectIdDto Company { get; set; }
 }

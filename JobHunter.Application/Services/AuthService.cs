@@ -56,7 +56,7 @@ public sealed class AuthService : IAuthService
                 Email = user.Email,
                 Name = user.Name,
                 Avatar = user.Avatar,
-                Role = UserManagementService.MapUser(user).Role
+                Role = MapRole(user)
             }
         };
     }
@@ -128,19 +128,42 @@ public sealed class AuthService : IAuthService
 
     private ResLoginDto BuildLoginResponse(JobHunter.Domain.Entities.User user, string accessToken, string refreshToken)
     {
-        var userDto = UserManagementService.MapUser(user);
         return new ResLoginDto
         {
             AccessToken = accessToken,
             RefreshTokenInternal = refreshToken,
             User = new ResLoginDto.UserLoginDto
             {
-                Id = userDto.Id,
-                Email = userDto.Email,
-                Name = userDto.Name,
-                Avatar = userDto.Avatar,
-                Role = userDto.Role
+                Id = user.Id,
+                Email = user.Email,
+                Name = user.Name,
+                Avatar = user.Avatar,
+                Role = MapRole(user)
             }
+        };
+    }
+
+    private static ResLoginDto.RoleDto? MapRole(JobHunter.Domain.Entities.User user)
+    {
+        if (user.Role is null)
+        {
+            return null;
+        }
+
+        return new ResLoginDto.RoleDto
+        {
+            Id = user.Role.Id,
+            Name = user.Role.Name,
+            Permissions = user.Role.Permissions
+                .Select(permission => new ResLoginDto.PermissionDto
+                {
+                    Id = permission.Id,
+                    Name = permission.Name,
+                    ApiPath = permission.ApiPath,
+                    Method = permission.Method,
+                    Module = permission.Module
+                })
+                .ToList()
         };
     }
 

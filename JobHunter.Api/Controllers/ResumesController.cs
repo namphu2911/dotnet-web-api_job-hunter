@@ -1,5 +1,6 @@
 using JobHunter.Application.Abstractions;
 using JobHunter.Application.Contracts.Resumes;
+using JobHunter.Api.Contracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using JobHunter.Api.Authorization;
@@ -78,21 +79,21 @@ public class ResumesController : ControllerBase
 
     [HttpGet]
     [Authorize]
-    public async Task<IActionResult> GetList([FromQuery] string? filter, [FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> GetList([FromQuery] ListQueryParameters query, CancellationToken cancellationToken = default)
     {
-        var result = await _resumeService.GetListAsync(filter, page, pageSize, cancellationToken);
+        var result = await _resumeService.GetListAsync(query.Filter, query.ResolvePage(), query.ResolvePageSize(), query.Sort, cancellationToken);
         return Ok(result);
     }
 
     [HttpPost("by-user")]
     [Authorize]
-    public async Task<IActionResult> GetByUser([FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> GetByUser([FromQuery] ListQueryParameters query, CancellationToken cancellationToken = default)
     {
         // Extract userId from claims (assume sub claim is userId)
         var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "sub" || c.Type.EndsWith("/nameidentifier"));
         if (userIdClaim == null || !long.TryParse(userIdClaim.Value, out var userId))
             return Unauthorized(new { message = "User ID not found in token" });
-        var result = await _resumeService.GetByUserAsync(userId, page, pageSize, cancellationToken);
+        var result = await _resumeService.GetByUserAsync(userId, query.ResolvePage(), query.ResolvePageSize(), query.Sort, cancellationToken);
         return Ok(result);
     }
 }

@@ -1,5 +1,7 @@
 using JobHunter.Application.Abstractions;
+using JobHunter.Application.Contracts;
 using JobHunter.Application.Contracts.Users;
+using JobHunter.Api.Contracts;
 using JobHunter.Api.Attributes;
 using Microsoft.AspNetCore.Mvc;
 
@@ -56,12 +58,9 @@ public sealed class UsersController : ControllerBase
     [HttpGet]
     [ApiMessage("Fetch users successfully")]
     [ProducesResponseType(typeof(ResultPaginationDto<ResUserDto>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ResultPaginationDto<ResUserDto>>> GetUsers(
-        [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 20,
-        CancellationToken cancellationToken = default)
+    public async Task<ActionResult<ResultPaginationDto<ResUserDto>>> GetUsers([FromQuery] ListQueryParameters query, CancellationToken cancellationToken = default)
     {
-        var users = await _userManagementService.GetUsersAsync(page, pageSize, cancellationToken);
+        var users = await _userManagementService.GetUsersAsync(query.ResolvePage(), query.ResolvePageSize(), query.Filter, query.Sort, cancellationToken);
         return Ok(users);
     }
 

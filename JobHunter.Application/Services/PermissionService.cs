@@ -1,4 +1,5 @@
 using JobHunter.Application.Abstractions;
+using JobHunter.Application.Contracts;
 using JobHunter.Application.Contracts.Permissions;
 using JobHunter.Domain.Entities;
 using JobHunter.Domain.Repositories;
@@ -52,9 +53,10 @@ namespace JobHunter.Application.Services
             return await _permissionRepository.GetByIdAsync(id, cancellationToken);
         }
 
-        public async Task<List<Permission>> GetPermissionsAsync(CancellationToken cancellationToken = default)
+        public async Task<ResultPaginationDto<Permission>> GetListAsync(string? filter, int page, int pageSize, string? sort, CancellationToken cancellationToken = default)
         {
-            return await _permissionRepository.GetAllAsync(cancellationToken);
+            var (items, total) = await _permissionRepository.GetPagedAsync(filter, page, pageSize, sort, cancellationToken);
+            return ResultPaginationDto<Permission>.Create(items, page, pageSize, total);
         }
 
         public async Task<bool> ExistsByModuleApiPathMethodAsync(string module, string apiPath, string method, CancellationToken cancellationToken = default)

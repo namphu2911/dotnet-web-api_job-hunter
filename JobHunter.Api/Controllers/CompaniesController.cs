@@ -1,5 +1,7 @@
 using JobHunter.Application.Abstractions;
+using JobHunter.Application.Contracts;
 using JobHunter.Application.Contracts.Companies;
+using JobHunter.Api.Contracts;
 using JobHunter.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -29,9 +31,9 @@ namespace JobHunter.Api.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<List<Company>>> GetAll(CancellationToken cancellationToken)
+        public async Task<ActionResult<ResultPaginationDto<Company>>> GetAll([FromQuery] ListQueryParameters query, CancellationToken cancellationToken)
         {
-            var companies = await _companyService.GetCompaniesAsync(cancellationToken);
+            var companies = await _companyService.GetListAsync(query.Filter, query.ResolvePage(), query.ResolvePageSize(), query.Sort, cancellationToken);
             return Ok(companies);
         }
 

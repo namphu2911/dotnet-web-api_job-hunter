@@ -1,5 +1,7 @@
 using JobHunter.Application.Abstractions;
+using JobHunter.Application.Contracts;
 using JobHunter.Application.Contracts.Permissions;
+using JobHunter.Api.Contracts;
 using JobHunter.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -33,9 +35,9 @@ namespace JobHunter.Api.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<List<Permission>>> GetAll(CancellationToken cancellationToken)
+        public async Task<ActionResult<ResultPaginationDto<Permission>>> GetAll([FromQuery] ListQueryParameters query, CancellationToken cancellationToken)
         {
-            var permissions = await _permissionService.GetPermissionsAsync(cancellationToken);
+            var permissions = await _permissionService.GetListAsync(query.Filter, query.ResolvePage(), query.ResolvePageSize(), query.Sort, cancellationToken);
             return Ok(permissions);
         }
 

@@ -1,172 +1,296 @@
-# BE Alignment Plan (Keep Existing FE Unchanged)
+# BE Alignment Plan v2 (FE-First, Non-Breaking)
 
-## 1) Muc tieu
+## 1) Objective
 
-- Dieu chinh API .NET hien tai de tuong thich voi FE contract dang duoc su dung.
-- Khong thay doi route, payload, response ma FE dang goi.
-- Giu thay doi toi thieu, an toan production, uu tien backward-compatible.
+- Align current .NET backend with the existing frontend contract in src/config/api.ts and src/types/backend.d.ts.
+- Keep frontend code unchanged.
+- Apply minimal, production-safe, backward-compatible changes.
 
-## 2) Scope can chinh sua tren BE
+## 2) Guiding Principles
 
-### 2.1 Response envelope va pagination
+- FE contract is source of truth for route, payload, and response shape.
+- Do not remove old payload shapes immediately; support parallel shapes for a transition window.
+- Prefer small, testable increments over broad refactors.
+- Keep response envelope stable: statusCode, message, error, data.
 
-- Bo sung contract pagination theo FE:
-	- Tu dang `Page/PageSize/Total/Items` sang dang FE ky vong: `meta: { page, pageSize, pages, total }, result: []`.
-	- Co the giu dong thoi 2 dang trong giai doan chuyen doi (de tranh pha vo client khac).
-- Dieu chinh envelope de FE doc on dinh:
-	- `message` can chap nhan string thong thuong.
-	- Van ho tro loi validation (mang object) nhung can dam bao FE khong vo do parse.
+## 3) Verified Current State
 
-### 2.2 Module Companies/Skills/Permissions/Roles
+### 3.1 Pagination state by module
 
-- GET list cua cac module nay hien tra ve danh sach thuong.
-- FE dang goi theo query string va ky vong du lieu phan trang.
-- Ke hoach BE:
-	- Ho tro query params `current`, `pageSize`, `qs` (hoac alias tuong ung).
-	- Tra ve data dang phan trang theo FE shape.
-	- Van cho phep goi cu khong query (fallback page=1, pageSize mac dinh).
+- Already FE-shape (meta/result): Users.
+- Has pagination but old shape (Page/PageSize/Total/Items): Jobs, Resumes.
+- No FE-style pagination endpoint yet: Companies, Skills, Permissions, Roles, Subscribers.
 
-### 2.3 Module Subscribers
+### 3.2 Endpoint coverage mismatch
 
-- FE can cac API:
-	- GET `/api/v1/subscribers?{query}`
-	- GET `/api/v1/subscribers/{id}`
-	- DELETE `/api/v1/subscribers/{id}`
-	- POST `/api/v1/subscribers/skills`
-- BE hien tai chua expose GET by id/list va DELETE route tuong ung.
-- Ke hoach BE:
-	- Them endpoint GET list co pagination contract FE.
-	- Them endpoint GET by id.
-	- Them endpoint DELETE by id.
-	- Giu endpoint POST `skills` nhu hien tai.
+- FE calls Subscribers list/by-id/delete.
+- BE currently exposes Subscribers create/update/skills only.
 
-### 2.4 Module Resumes
+### 3.3 Payload mismatch
 
-- FE gui create payload dang:
-	- `user: { id }`, `job: { id }`, `status`, `email`, `url`.
-- BE hien dang nhan `User` va `Job` la `long` truc tiep.
-- Ke hoach BE:
-	- Mo rong `ReqCreateResumeDto` de chap nhan ca 2 format:
-		- Format hien tai (`user`, `job` la so).
-		- Format FE (`user.id`, `job.id`).
-	- Mapping ve domain id chung trong service layer.
+- Jobs request in FE uses object ids for skills/company in common paths.
+- Resumes create in FE sends user.id and job.id.
+- Roles and Subscribers can send id collections not strictly long[].
+- BE currently expects strict long-based DTOs in these modules.
 
-### 2.5 Module Jobs
+### 3.4 Auth mismatch
 
-- FE gui:
-	- `skills` la mang object skill hoac id.
-	- `company` la object `{ id, name }` hoac id.
-- BE hien yeu cau `skills: long[]`, `company: long`.
-- Ke hoach BE:
-	- Mo rong create/update request de chap nhan union payload:
-		- `skills`: long[] hoac object[] (co field id).
-		- `company`: long hoac object co id.
-	- Response de FE de dung:
-		- Xem xet bo sung thong tin company trong job response neu FE su dung.
+- FE expects user.role.permissions[] in login/account/refresh responses.
+- BE auth DTO currently returns role id/name only.
 
-### 2.6 Module Roles va Subscribers input
+### 3.5 Response shape mismatch in Jobs
 
-- FE co xu huong gui `permissions` va `skills` theo string[]/object[] o mot so luong.
-- BE yeu cau long[].
-- Ke hoach BE:
-	- Cho phep parse da dang input (string number, object co id).
-	- Chuan hoa ve long[] truoc khi xu ly service.
+- FE expects job.company object and job.skills object array.
+- BE currently returns skills as List<string> and no company object in ResJobDto.
 
-### 2.7 Auth account shape
+## 4) Scope
 
-- FE mong doi `user.role.permissions[]` trong account/login object.
-- BE hien role trong login/account chi co id + name.
-- Ke hoach BE:
-	- Bo sung permissions trong role response cua `login`, `account`, `refresh`.
-	- Dam bao khong lo thong tin nhay cam.
+### 4.1 In scope
 
-### 2.8 File upload response
+- Companies/Skills/Permissions/Roles/Subscribers list endpoints with FE pagination shape.
+- Jobs/Resumes pagination shape migration to FE meta/result.
+- Flexible payload parsing for Jobs/Resumes/Roles/Subscribers.
+- Auth response extension to include role.permissions.
+- Subscribers endpoint parity with FE calls.
+- Backward-compatible bridge for old payload shapes.
 
-- FE hien doc `fileName`.
-- BE tra `fileName` + `uploadedAt`.
-- Khong bat buoc doi, nhung ke hoach:
-	- Giu nguyen output hien tai (khong break FE).
+### 4.2 Out of scope
 
-## 3) Trinh tu trien khai de giam rui ro
+- Frontend code changes.
+- Database schema redesign not required by contract alignment.
+- Permission model redesign.
+- Unrelated refactor and code style churn.
 
-1. Tao adapter contracts moi (request/response DTO cho FE shape).
-2. Cap nhat mapping tai controller/service, uu tien non-breaking.
-3. Bo sung endpoint thieu cho Subscribers.
-4. Chinh pagination cho cac module list.
-5. Mo rong Auth response (role.permissions).
-6. Regression test toan bo route FE dang dung.
+## 5) Target Contract Specification
 
-## 4) Chi tiet implementation theo tang
+### 5.1 Envelope
 
-### 4.1 Contract layer (Application.Contracts)
+- Keep envelope for all API responses:
+  - statusCode: number
+  - message: string or validation object list
+  - error: string (optional)
+  - data: payload or null
 
-- Them cac DTO request linh hoat (union-like) cho Jobs/Resumes/Roles/Subscribers.
-- Them DTO pagination theo FE (`meta/result`).
-- Khong xoa DTO cu de tranh pha vo call noi bo.
+### 5.2 Pagination
 
-### 4.2 Controller layer (Api/Controllers)
+- Standardize data payload to:
+  - meta: { page, pageSize, pages, total }
+  - result: []
 
-- Companies/Skills/Permissions/Roles:
-	- Nang cap GET list co query + pagination response FE.
-- Subscribers:
-	- Them GET list, GET by id, DELETE by id.
-- Jobs/Resumes:
-	- Nhan payload da dang va mapping ve request noi bo.
-- Auth:
-	- Tra role kem permissions.
+### 5.3 Query compatibility
 
-### 4.3 Service layer (Application/Services)
+- Accept aliases in all list endpoints:
+  - page or current -> page
+  - size or pageSize -> pageSize
+- Keep optional filter query support using FE format currently in use.
 
-- Them helper parse id linh hoat (long/string/object id).
-- Validate input va tra loi ro rang khi payload sai shape.
-- Khong dung null-forgiving, tuan thu nullable.
+### 5.4 Flexible id parsing rules
 
-## 5) Acceptance criteria
+- Supported input forms:
+  - number: 123
+  - numeric string: "123"
+  - object id ref: { id: 123 } or { id: "123" }
+- For array ids:
+  - [1,2], ["1","2"], [{id:1},{id:"2"}] are all valid.
+- Invalid shape returns 400 with safe, clear message.
 
-- FE giu nguyen code van goi duoc tat ca API hien co.
-- Khong con 4xx do sai shape payload o Jobs/Resumes/Roles/Subscribers.
-- Companies/Skills/Permissions/Roles tra duoc danh sach dang FE pagination.
-- Subscribers co du CRUD ma FE dang goi.
-- Auth account/login/refresh tra role.permissions theo ky vong FE.
-- Build xanh va khong them warning nghiem trong.
+### 5.5 Module-specific target
 
-## 6) Test strategy
+- Jobs create/update:
+  - skills: support id array and object-id array.
+  - company: support id scalar and object-id.
+  - response: include company {id,name,logo?} and skills [{id,name}].
+- Resumes create:
+  - support both user/job scalar id and object-id shape.
+- Roles create/update:
+  - permissions accepts number/string/object id arrays.
+- Subscribers create/update:
+  - skills accepts number/string/object id arrays.
+- Auth login/account/refresh:
+  - user.role.permissions[] included.
+- Subscribers endpoints:
+  - add GET /api/v1/subscribers
+  - add GET /api/v1/subscribers/{id}
+  - add DELETE /api/v1/subscribers/{id}
 
-- Unit tests:
-	- Mapping/parsing payload da dang (id tu number/string/object).
-	- Pagination mapper meta/result.
-- Integration/API tests:
-	- Happy path cho tung endpoint FE su dung.
-	- 1-2 failure path cho payload invalid.
-	- Xac minh envelope response du key (`statusCode`, `message`, `data`).
+## 6) Implementation Design
 
-## 7) Rui ro va giam thieu
+### 6.1 Shared contracts and helpers
 
-- Rui ro 1: Break client khac dang dung shape cu.
-	- Giam thieu: support song song shape cu + moi trong 1-2 release.
-- Rui ro 2: Parsing input da dang tang do phuc tap.
-	- Giam thieu: tach helper parse rieng, test bao phu.
-- Rui ro 3: Performance khi them permissions vao auth response.
-	- Giam thieu: toi uu query include va cache claims neu can.
+- Add flexible input DTO helpers in Application.Contracts:
+  - ReqObjectIdDto-like id ref for mixed numeric/string id.
+  - wrapper DTOs for scalar-or-object id.
+  - wrapper DTOs for mixed id array.
+- Add parsing helper in Application layer (single place):
+  - ParseSingleId(...)
+  - ParseIdList(...)
+  - normalize to List<long>.
+- Add pagination mapper helper:
+  - Convert old paging result to FE meta/result shape.
 
-## 8) Verification gates
+### 6.2 Controller strategy
 
-Chay tai root solution:
+- Keep existing routes unchanged.
+- Expand request binding contracts for mixed payloads.
+- Keep response envelope behavior via existing filter/middleware.
+- Return ActionResult<T> where multiple outcomes exist.
+
+### 6.3 Service strategy
+
+- Service receives normalized ids only (long/List<long>) after mapping.
+- Validate existence and business rules as before.
+- Keep cancellation tokens propagated.
+
+### 6.4 Backward compatibility window
+
+- Support old and new payload shape in parallel for 1-2 releases.
+- Add deprecation note in docs for old-only shape paths.
+
+## 7) Delivery Plan (Phased)
+
+### Phase 0 - Baseline and guardrails
+
+- Freeze current FE-used endpoints list.
+- Capture baseline samples for key responses (auth, jobs, resumes, subscribers).
+- Define quick regression checklist.
+
+Done when:
+
+- Baseline contract checklist documented and approved.
+
+### Phase 1 - Subscribers parity
+
+- Add missing Subscribers GET list/by-id/delete endpoints.
+- Add list pagination FE shape.
+- Extend service abstraction and implementation accordingly.
+
+Done when:
+
+- FE subscriber API set is fully callable without FE change.
+
+### Phase 2 - Pagination normalization
+
+- Convert Jobs and Resumes list responses to FE meta/result.
+- Add pagination/filter support to Companies/Skills/Permissions/Roles/Subscribers list.
+- Keep Users behavior unchanged.
+
+Done when:
+
+- All FE list endpoints return same FE pagination shape.
+
+### Phase 3 - Flexible payload inputs
+
+- Implement mixed id parsing for Jobs/Resumes/Roles/Subscribers.
+- Add validation errors for invalid mixed payload.
+
+Done when:
+
+- No shape-related 4xx on FE normal create/update flows.
+
+### Phase 4 - Auth contract completion
+
+- Extend login/account/refresh role object with permissions[].
+- Ensure no sensitive internal fields leaked.
+
+Done when:
+
+- FE account model reads role.permissions without fallback hacks.
+
+### Phase 5 - Hardening and docs
+
+- Final pass for error handling consistency.
+- Update API docs and migration notes.
+- Confirm no route or envelope regression.
+
+Done when:
+
+- Build green, smoke checklist green, docs updated.
+
+## 8) Acceptance Criteria
+
+- FE keeps current code and can call all existing APIs successfully.
+- List APIs used by FE return data.meta/data.result shape.
+- Jobs/Resumes/Roles/Subscribers accept mixed id payload forms described above.
+- Subscribers has complete endpoint coverage used by FE.
+- Auth login/account/refresh includes user.role.permissions[].
+- Envelope keys stay compatible: statusCode, message, error, data.
+- No new high-severity build issues.
+
+## 9) Test Strategy
+
+### 9.1 Unit tests
+
+- Flexible id parser:
+  - number/string/object id single parse.
+  - mixed arrays parse.
+  - invalid shape failure path.
+- Pagination mapper:
+  - total/pages calculation.
+  - empty result handling.
+
+### 9.2 API/integration tests
+
+- Happy path for each FE-used endpoint group.
+- Failure paths:
+  - invalid id shape
+  - unknown referenced ids
+  - malformed filter/pagination values
+- Contract assertions:
+  - envelope keys
+  - pagination meta/result keys
+  - auth role.permissions presence
+
+### 9.3 Current repository constraint
+
+- Solution currently has no dedicated .NET test project.
+- Add at least one test project before claiming test coverage completion.
+
+## 10) Risks and Mitigations
+
+- Risk: Breaking non-FE clients using old payload only.
+  - Mitigation: parallel support window and clear deprecation notes.
+- Risk: Complex parsing increases bug surface.
+  - Mitigation: centralized parser and deterministic unit tests.
+- Risk: Auth payload expansion impacts performance.
+  - Mitigation: load only needed permission fields and verify query behavior.
+- Risk: Inconsistent pagination/filter implementation across controllers.
+  - Mitigation: shared query normalization helper.
+
+## 11) Rollout and Rollback
+
+- Rollout:
+  - merge by phase order, deploy incrementally.
+  - smoke FE critical flows after each phase.
+- Rollback:
+  - preserve old accepted payload paths during transition.
+  - revert endpoint-specific changes if regression appears.
+
+## 12) Verification Gates
+
+Run from solution root:
 
 ```bash
 dotnet restore
 dotnet build
 ```
 
-Neu co test project:
+When test project is available:
 
 ```bash
 dotnet test
 ```
 
-## 9) Deliverables
+Mandatory manual smoke after build:
 
-- Cac endpoint BE tuong thich FE contract hien tai.
-- Test case moi/duoc cap nhat cho contract moi.
-- Tai lieu API cap nhat trong docs sau khi merge.
+- Auth: login, account, refresh, logout.
+- Admin lists: companies, skills, permissions, roles, users.
+- Jobs: list, create, update, get by id.
+- Resumes: list, create, by-user.
+- Subscribers: list, by id, create, update, delete, skills.
 
+## 13) Deliverables
+
+- Backend endpoints aligned with current FE contract.
+- New/updated automated tests for changed behavior.
+- Updated alignment document and API notes.
+- Brief migration note for old payload deprecation timeline.

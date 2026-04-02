@@ -14,7 +14,7 @@ public sealed class ResumeRepository : IResumeRepository
         _dbContext = dbContext;
     }
 
-    public async Task<(List<Resume> Items, int Total)> GetPagedAsync(string? filter, int page, int pageSize, CancellationToken cancellationToken = default)
+    public async Task<(List<Resume> Items, int Total)> GetPagedAsync(string? filter, int page, int pageSize, string? sort, CancellationToken cancellationToken = default)
     {
         var query = _dbContext.Resumes
             .Include(r => r.User)
@@ -22,20 +22,36 @@ public sealed class ResumeRepository : IResumeRepository
             .AsNoTracking()
             .AsQueryable();
 
-        if (!string.IsNullOrWhiteSpace(filter))
+        foreach (var value in SpringFilterQuery.GetContainsValues(filter, "email"))
         {
-            var f = filter.Trim().ToLowerInvariant();
-            query = query.Where(r =>
-                (r.Email != null && r.Email.ToLower().Contains(f)) ||
-                (r.Job != null && r.Job.Name.ToLower().Contains(f)));
+            var term = value.ToLowerInvariant();
+            query = query.Where(r => r.Email.ToLower().Contains(term));
         }
 
+        foreach (var value in SpringFilterQuery.GetContainsValues(filter, "status"))
+        {
+            var term = value.ToUpperInvariant();
+            query = query.Where(r => r.Status.ToString().ToUpper().Contains(term));
+        }
+
+        var statusInValues = SpringFilterQuery.GetInValues(filter, "status");
+        if (statusInValues.Count > 0)
+        {
+            var statuses = statusInValues.Select(v => v.ToUpperInvariant()).ToList();
+            query = query.Where(r => statuses.Contains(r.Status.ToString().ToUpper()));
+        }
+
+        query = ApplySort(query, sort);
+
         var total = await query.CountAsync(cancellationToken);
-        var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync(cancellationToken);
+        var items = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
         return (items, total);
     }
 
-    public async Task<(List<Resume> Items, int Total)> GetByUserPagedAsync(long userId, int page, int pageSize, CancellationToken cancellationToken = default)
+    public async Task<(List<Resume> Items, int Total)> GetByUserPagedAsync(long userId, int page, int pageSize, string? sort, CancellationToken cancellationToken = default)
     {
         var query = _dbContext.Resumes
             .Include(r => r.User)
@@ -43,8 +59,13 @@ public sealed class ResumeRepository : IResumeRepository
             .AsNoTracking()
             .Where(r => r.UserId == userId);
 
+        query = ApplySort(query, sort);
+
         var total = await query.CountAsync(cancellationToken);
-        var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync(cancellationToken);
+        var items = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
         return (items, total);
     }
 
@@ -56,16 +77,6 @@ public sealed class ResumeRepository : IResumeRepository
                 .ThenInclude(j => j.Company)
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
-    }
-
-    public async Task<List<Resume>> GetAllAsync(CancellationToken cancellationToken = default)
-    {
-        return await _dbContext.Resumes
-            .Include(r => r.User)
-            .Include(r => r.Job)
-                .ThenInclude(j => j.Company)
-            .AsNoTracking()
-            .ToListAsync(cancellationToken);
     }
 
     public async Task AddAsync(Resume resume, CancellationToken cancellationToken = default)
@@ -88,5 +99,21 @@ public sealed class ResumeRepository : IResumeRepository
             _dbContext.Resumes.Remove(entity);
             await _dbContext.SaveChangesAsync(cancellationToken);
         }
+    }
+
+    private static IQueryable<Resume> ApplySort(IQueryable<Resume> query, string? sort)
+    {
+        if (!SpringFilterQuery.TryParseSort(sort, out var field, out var desc))
+        {
+            return query.OrderByDescending(x => x.UpdatedAt ?? x.CreatedAt);
+        }
+
+        return field.ToLowerInvariant() switch
+        {
+            "status" => desc ? query.OrderByDescending(x => x.Status) : query.OrderBy(x => x.Status),
+            "createdat" => desc ? query.OrderByDescending(x => x.CreatedAt) : query.OrderBy(x => x.CreatedAt),
+            "updatedat" => desc ? query.OrderByDescending(x => x.UpdatedAt) : query.OrderBy(x => x.UpdatedAt),
+            _ => query.OrderByDescending(x => x.UpdatedAt ?? x.CreatedAt)
+        };
     }
 }

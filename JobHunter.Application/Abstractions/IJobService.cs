@@ -9,5 +9,5 @@ public interface IJobService
     Task<ResJobDto> UpdateAsync(ReqUpdateJobDto dto, CancellationToken cancellationToken = default);
     Task DeleteAsync(long id, CancellationToken cancellationToken = default);
     Task<ResJobDto?> GetByIdAsync(long id, CancellationToken cancellationToken = default);
-    Task<ResultPaginationDto<ResJobDto>> GetListAsync(string? filter, int page, int pageSize, CancellationToken cancellationToken = default);
+    Task<ResultPaginationDto<ResJobDto>> GetListAsync(string? filter, int page, int pageSize, string? sort, CancellationToken cancellationToken = default);
 }

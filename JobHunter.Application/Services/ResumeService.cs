@@ -1,6 +1,7 @@
 using JobHunter.Application.Abstractions;
 using JobHunter.Application.Contracts.Resumes;
 using JobHunter.Application.Contracts;
+using JobHunter.Application.Utilities;
 using JobHunter.Domain.Entities;
 using JobHunter.Domain.Repositories;
 
@@ -21,15 +22,18 @@ public class ResumeService : IResumeService
 
     public async Task<ResCreateResumeDto> CreateAsync(ReqCreateResumeDto dto, CancellationToken cancellationToken = default)
     {
+        var userId = FlexibleIdParser.ParseRequired(dto.User, "user");
+        var jobId = FlexibleIdParser.ParseRequired(dto.Job, "job");
+
         // Validate user
-        var user = await _userRepository.GetByIdAsync(dto.User, cancellationToken);
+        var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
         if (user == null)
-            throw new InvalidOperationException($"User with id {dto.User} not found");
+            throw new InvalidOperationException($"User with id {userId} not found");
 
         // Validate job
-        var job = await _jobRepository.GetByIdAsync(dto.Job, cancellationToken);
+        var job = await _jobRepository.GetByIdAsync(jobId, cancellationToken);
         if (job == null)
-            throw new InvalidOperationException($"Job with id {dto.Job} not found");
+            throw new InvalidOperationException($"Job with id {jobId} not found");
 
         if (!Enum.TryParse<Domain.Enums.ResumeState>(dto.Status, true, out var st))
             throw new InvalidOperationException($"Invalid status value: {dto.Status}");
@@ -78,28 +82,18 @@ public class ResumeService : IResumeService
         return MapToResResumeDto(resume);
     }
 
-    public async Task<ResultPaginationDto<ResResumeDto>> GetListAsync(string? filter, int page, int pageSize, CancellationToken cancellationToken = default)
+    public async Task<ResultPaginationDto<ResResumeDto>> GetListAsync(string? filter, int page, int pageSize, string? sort, CancellationToken cancellationToken = default)
     {
-        var (items, total) = await _resumeRepository.GetPagedAsync(filter, page, pageSize, cancellationToken);
-        return new ResultPaginationDto<ResResumeDto>
-        {
-            Page = page,
-            PageSize = pageSize,
-            Total = total,
-            Items = items.Select(MapToResResumeDto).ToList()
-        };
+        var (items, total) = await _resumeRepository.GetPagedAsync(filter, page, pageSize, sort, cancellationToken);
+        var result = items.Select(MapToResResumeDto).ToList();
+        return ResultPaginationDto<ResResumeDto>.Create(result, page, pageSize, total);
     }
 
-    public async Task<ResultPaginationDto<ResResumeDto>> GetByUserAsync(long userId, int page, int pageSize, CancellationToken cancellationToken = default)
+    public async Task<ResultPaginationDto<ResResumeDto>> GetByUserAsync(long userId, int page, int pageSize, string? sort, CancellationToken cancellationToken = default)
     {
-        var (items, total) = await _resumeRepository.GetByUserPagedAsync(userId, page, pageSize, cancellationToken);
-        return new ResultPaginationDto<ResResumeDto>
-        {
-            Page = page,
-            PageSize = pageSize,
-            Total = total,
-            Items = items.Select(MapToResResumeDto).ToList()
-        };
+        var (items, total) = await _resumeRepository.GetByUserPagedAsync(userId, page, pageSize, sort, cancellationToken);
+        var result = items.Select(MapToResResumeDto).ToList();
+        return ResultPaginationDto<ResResumeDto>.Create(result, page, pageSize, total);
     }
 
     private ResResumeDto MapToResResumeDto(Resume resume)
@@ -111,6 +105,8 @@ public class ResumeService : IResumeService
             Url = resume.Url,
             Status = resume.Status.ToString(),
             CompanyName = resume.Job?.Company?.Name,
+            User = resume.User is null ? null : new ResObjectIdNameDto { Id = resume.User.Id, Name = resume.User.Name },
+            Job = resume.Job is null ? null : new ResObjectIdNameDto { Id = resume.Job.Id, Name = resume.Job.Name },
             UserId = resume.UserId,
             UserName = resume.User?.Name,
             JobId = resume.JobId,

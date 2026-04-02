@@ -1,4 +1,5 @@
 using JobHunter.Application.Abstractions;
+using JobHunter.Application.Contracts;
 using JobHunter.Application.Contracts.Skills;
 using JobHunter.Domain.Entities;
 using JobHunter.Domain.Repositories;
@@ -46,9 +47,10 @@ namespace JobHunter.Application.Services
             return await _skillRepository.GetByIdAsync(id, cancellationToken);
         }
 
-        public async Task<List<Skill>> GetSkillsAsync(CancellationToken cancellationToken = default)
+        public async Task<ResultPaginationDto<Skill>> GetListAsync(string? filter, int page, int pageSize, string? sort, CancellationToken cancellationToken = default)
         {
-            return await _skillRepository.GetAllAsync(cancellationToken);
+            var (items, total) = await _skillRepository.GetPagedAsync(filter, page, pageSize, sort, cancellationToken);
+            return ResultPaginationDto<Skill>.Create(items, page, pageSize, total);
         }
 
         public async Task<bool> ExistsByNameAsync(string name, CancellationToken cancellationToken = default)

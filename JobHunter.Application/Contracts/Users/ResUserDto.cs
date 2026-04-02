@@ -1,3 +1,4 @@
+using JobHunter.Application.Contracts;
 using JobHunter.Domain.Enums;
 
 namespace JobHunter.Application.Contracts.Users;

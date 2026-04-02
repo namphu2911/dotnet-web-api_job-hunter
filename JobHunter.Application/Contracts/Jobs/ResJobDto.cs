@@ -16,5 +16,19 @@ public class ResJobDto
     public string? CreatedBy { get; set; }
     public DateTime? UpdatedAt { get; set; }
     public string? UpdatedBy { get; set; }
-    public List<string> Skills { get; set; } = new();
+    public ResJobCompanyDto? Company { get; set; }
+    public List<ResJobSkillDto> Skills { get; set; } = new();
+
+    public sealed class ResJobCompanyDto
+    {
+        public long Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string? Logo { get; set; }
+    }
+
+    public sealed class ResJobSkillDto
+    {
+        public long Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+    }
 }

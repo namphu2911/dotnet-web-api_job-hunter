@@ -1,3 +1,4 @@
+using JobHunter.Application.Contracts;
 using JobHunter.Application.Contracts.Users;
 
 namespace JobHunter.Application.Abstractions;
@@ -10,7 +11,7 @@ public interface IUserManagementService
 
     Task<ResUserDto?> GetUserByIdAsync(long id, CancellationToken cancellationToken = default);
 
-    Task<ResultPaginationDto<ResUserDto>> GetUsersAsync(int page, int pageSize, CancellationToken cancellationToken = default);
+    Task<ResultPaginationDto<ResUserDto>> GetUsersAsync(int page, int pageSize, string? filter, string? sort, CancellationToken cancellationToken = default);
 
     Task<bool> DeleteUserAsync(long id, CancellationToken cancellationToken = default);
 }

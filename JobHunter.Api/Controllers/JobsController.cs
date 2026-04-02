@@ -1,5 +1,6 @@
 using JobHunter.Application.Abstractions;
 using JobHunter.Application.Contracts.Jobs;
+using JobHunter.Api.Contracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using JobHunter.Api.Authorization;
@@ -78,9 +79,9 @@ public class JobsController : ControllerBase
 
     [HttpGet]
     [Authorize]
-    public async Task<IActionResult> GetList([FromQuery] string? filter, [FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> GetList([FromQuery] ListQueryParameters query, CancellationToken cancellationToken = default)
     {
-        var result = await _jobService.GetListAsync(filter, page, pageSize, cancellationToken);
+        var result = await _jobService.GetListAsync(query.Filter, query.ResolvePage(), query.ResolvePageSize(), query.Sort, cancellationToken);
         return Ok(result);
     }
 }

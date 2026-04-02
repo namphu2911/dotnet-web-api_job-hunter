@@ -1,4 +1,5 @@
 using JobHunter.Application.Abstractions;
+using JobHunter.Application.Contracts;
 using JobHunter.Application.Contracts.Users;
 using JobHunter.Application.Services.Security;
 using JobHunter.Domain.Entities;
@@ -68,13 +69,13 @@ public sealed class UserManagementService : IUserManagementService
         return user is null ? null : MapUser(user);
     }
 
-    public async Task<ResultPaginationDto<ResUserDto>> GetUsersAsync(int page, int pageSize, CancellationToken cancellationToken = default)
+    public async Task<ResultPaginationDto<ResUserDto>> GetUsersAsync(int page, int pageSize, string? filter, string? sort, CancellationToken cancellationToken = default)
     {
         page = page < 1 ? 1 : page;
         pageSize = pageSize < 1 ? 20 : pageSize;
 
-        var users = await _userRepository.GetUsersAsync(page, pageSize, cancellationToken);
-        var total = await _userRepository.CountUsersAsync(cancellationToken);
+        var users = await _userRepository.GetUsersAsync(page, pageSize, filter, sort, cancellationToken);
+        var total = await _userRepository.CountUsersAsync(filter, cancellationToken);
         var pages = (int)Math.Ceiling(total / (double)pageSize);
 
         return new ResultPaginationDto<ResUserDto>

@@ -1,3 +1,5 @@
+using JobHunter.Application.Contracts;
+
 namespace JobHunter.Application.Contracts.Resumes;
 
 public class ResResumeDto
@@ -7,6 +9,10 @@ public class ResResumeDto
     public string Url { get; set; } = null!;
     public string Status { get; set; } = null!;
     public string? CompanyName { get; set; }
+    public ResObjectIdNameDto? User { get; set; }
+    public ResObjectIdNameDto? Job { get; set; }
+
+    // Backward compatibility fields.
     public long UserId { get; set; }
     public string? UserName { get; set; }
     public long JobId { get; set; }

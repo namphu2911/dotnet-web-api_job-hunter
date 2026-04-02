@@ -8,6 +8,7 @@ namespace JobHunter.Domain.Repositories
     public interface ISubscriberRepository
     {
         Task<Subscriber?> GetByIdAsync(long id, CancellationToken cancellationToken = default);
+        Task<(List<Subscriber> Items, int Total)> GetPagedAsync(string? filter, int page, int pageSize, string? sort, CancellationToken cancellationToken = default);
         Task<List<Subscriber>> GetAllAsync(CancellationToken cancellationToken = default);
         Task AddAsync(Subscriber subscriber, CancellationToken cancellationToken = default);
         Task UpdateAsync(Subscriber subscriber, CancellationToken cancellationToken = default);

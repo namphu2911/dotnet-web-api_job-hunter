@@ -34,19 +34,51 @@ public sealed class UserRepository : IUserRepository
         return await _dbContext.Users.AnyAsync(x => x.Email == email, cancellationToken);
     }
 
-    public async Task<IReadOnlyList<User>> GetUsersAsync(int page, int pageSize, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<User>> GetUsersAsync(int page, int pageSize, string? filter, string? sort, CancellationToken cancellationToken = default)
     {
-        return await _dbContext.Users
+        var query = _dbContext.Users
+            .Include(x => x.Company)
+            .Include(x => x.Role)
             .AsNoTracking()
-            .OrderBy(x => x.Id)
+            .AsQueryable();
+
+        foreach (var value in SpringFilterQuery.GetContainsValues(filter, "name"))
+        {
+            var term = value.ToLowerInvariant();
+            query = query.Where(u => u.Name.ToLower().Contains(term));
+        }
+
+        foreach (var value in SpringFilterQuery.GetContainsValues(filter, "email"))
+        {
+            var term = value.ToLowerInvariant();
+            query = query.Where(u => u.Email.ToLower().Contains(term));
+        }
+
+        query = ApplySort(query, sort);
+
+        return await query
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<int> CountUsersAsync(CancellationToken cancellationToken = default)
+    public async Task<int> CountUsersAsync(string? filter, CancellationToken cancellationToken = default)
     {
-        return await _dbContext.Users.CountAsync(cancellationToken);
+        var query = _dbContext.Users.AsNoTracking().AsQueryable();
+
+        foreach (var value in SpringFilterQuery.GetContainsValues(filter, "name"))
+        {
+            var term = value.ToLowerInvariant();
+            query = query.Where(u => u.Name.ToLower().Contains(term));
+        }
+
+        foreach (var value in SpringFilterQuery.GetContainsValues(filter, "email"))
+        {
+            var term = value.ToLowerInvariant();
+            query = query.Where(u => u.Email.ToLower().Contains(term));
+        }
+
+        return await query.CountAsync(cancellationToken);
     }
 
     public async Task<User> AddAsync(User user, CancellationToken cancellationToken = default)
@@ -123,5 +155,22 @@ public sealed class UserRepository : IUserRepository
         user.UpdatedAt = DateTime.UtcNow;
 
         await _dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    private static IQueryable<User> ApplySort(IQueryable<User> query, string? sort)
+    {
+        if (!SpringFilterQuery.TryParseSort(sort, out var field, out var desc))
+        {
+            return query.OrderByDescending(x => x.UpdatedAt ?? x.CreatedAt);
+        }
+
+        return field.ToLowerInvariant() switch
+        {
+            "name" => desc ? query.OrderByDescending(x => x.Name) : query.OrderBy(x => x.Name),
+            "email" => desc ? query.OrderByDescending(x => x.Email) : query.OrderBy(x => x.Email),
+            "createdat" => desc ? query.OrderByDescending(x => x.CreatedAt) : query.OrderBy(x => x.CreatedAt),
+            "updatedat" => desc ? query.OrderByDescending(x => x.UpdatedAt) : query.OrderBy(x => x.UpdatedAt),
+            _ => query.OrderByDescending(x => x.UpdatedAt ?? x.CreatedAt)
+        };
     }
 }

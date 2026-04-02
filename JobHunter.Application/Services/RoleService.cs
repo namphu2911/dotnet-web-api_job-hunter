@@ -1,5 +1,7 @@
 using JobHunter.Application.Abstractions;
+using JobHunter.Application.Contracts;
 using JobHunter.Application.Contracts.Roles;
+using JobHunter.Application.Utilities;
 using JobHunter.Domain.Entities;
 using JobHunter.Domain.Repositories;
 using System.Collections.Generic;
@@ -29,7 +31,8 @@ namespace JobHunter.Application.Services
             };
             if (dto.Permissions != null && dto.Permissions.Count > 0)
             {
-                var permissions = await _permissionRepository.FindByIdsAsync(dto.Permissions, cancellationToken);
+                var permissionIds = FlexibleIdParser.ParseList(dto.Permissions, "permissions");
+                var permissions = await _permissionRepository.FindByIdsAsync(permissionIds, cancellationToken);
                 foreach (var p in permissions)
                 {
                     role.Permissions.Add(p);
@@ -51,7 +54,8 @@ namespace JobHunter.Application.Services
                 role.Permissions.Clear();
                 if (dto.Permissions.Count > 0)
                 {
-                    var permissions = await _permissionRepository.FindByIdsAsync(dto.Permissions, cancellationToken);
+                    var permissionIds = FlexibleIdParser.ParseList(dto.Permissions, "permissions");
+                    var permissions = await _permissionRepository.FindByIdsAsync(permissionIds, cancellationToken);
                     foreach (var p in permissions)
                     {
                         role.Permissions.Add(p);
@@ -72,9 +76,10 @@ namespace JobHunter.Application.Services
             return await _roleRepository.GetByIdAsync(id, cancellationToken);
         }
 
-        public async Task<List<Role>> GetRolesAsync(CancellationToken cancellationToken = default)
+        public async Task<ResultPaginationDto<Role>> GetListAsync(string? filter, int page, int pageSize, string? sort, CancellationToken cancellationToken = default)
         {
-            return await _roleRepository.GetAllAsync(cancellationToken);
+            var (items, total) = await _roleRepository.GetPagedAsync(filter, page, pageSize, sort, cancellationToken);
+            return ResultPaginationDto<Role>.Create(items, page, pageSize, total);
         }
 
         public async Task<bool> ExistsByNameAsync(string name, CancellationToken cancellationToken = default)

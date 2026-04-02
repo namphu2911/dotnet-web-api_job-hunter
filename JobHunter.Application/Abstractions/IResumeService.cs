@@ -9,6 +9,6 @@ public interface IResumeService
     Task<ResUpdateResumeDto> UpdateAsync(ReqUpdateResumeDto dto, CancellationToken cancellationToken = default);
     Task DeleteAsync(long id, CancellationToken cancellationToken = default);
     Task<ResResumeDto?> GetByIdAsync(long id, CancellationToken cancellationToken = default);
-    Task<ResultPaginationDto<ResResumeDto>> GetListAsync(string? filter, int page, int pageSize, CancellationToken cancellationToken = default);
-    Task<ResultPaginationDto<ResResumeDto>> GetByUserAsync(long userId, int page, int pageSize, CancellationToken cancellationToken = default);
+    Task<ResultPaginationDto<ResResumeDto>> GetListAsync(string? filter, int page, int pageSize, string? sort, CancellationToken cancellationToken = default);
+    Task<ResultPaginationDto<ResResumeDto>> GetByUserAsync(long userId, int page, int pageSize, string? sort, CancellationToken cancellationToken = default);
 }
