@@ -15,9 +15,10 @@ Agent definitions live in `.github/agents/` at repository root.
 ## Suggested Task Flow
 
 1. Plan: define acceptance criteria and edge cases.
-2. Implement: apply smallest safe code change.
-3. Verify: run build/tests and inspect warnings.
-4. Review: check security and API contract stability.
+2. Contract check: inspect `src/config/api.ts` and `src/types/backend.d.ts` before backend edits.
+3. Implement: apply smallest safe .NET backend code change.
+4. Verify: run build/tests and inspect warnings.
+5. Review: check security and API contract stability.
 
 ## Prompt Patterns
 
@@ -31,3 +32,5 @@ Agent definitions live in `.github/agents/` at repository root.
 - Do not introduce unrelated refactors.
 - Preserve existing API routes unless explicitly changing contract.
 - Document behavior changes in PR summary.
+- Treat `src/` frontend API usage as source of truth for contract compatibility.
+- Treat `src/main/**` and `src/test/**` Java code as migration reference, not primary contract.

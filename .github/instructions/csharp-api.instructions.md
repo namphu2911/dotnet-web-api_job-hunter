@@ -35,6 +35,19 @@ applyTo: "**/*.cs"
 - Use request/response DTOs for API boundaries.
 - Preserve existing route and payload contracts unless explicitly requested.
 
+## Frontend Contract First (JobHunter)
+
+- Treat `src/config/api.ts` and `src/types/backend.d.ts` as the primary API contract reference.
+- Keep route prefixes and endpoint shapes compatible with frontend usage (typically `/api/v1/*`).
+- Preserve response envelope compatibility (`statusCode`, `message`, `error`, `data`) for frontend consumers.
+- Maintain auth compatibility expected by frontend (`/api/v1/auth/login`, `/api/v1/auth/account`, `/api/v1/auth/refresh`, `/api/v1/auth/logout`, refresh cookie usage).
+
+## Migration Source Hierarchy
+
+- Use `src/main/java/**` and `src/test/java/**` only as migration behavior references.
+- If Java legacy behavior conflicts with active frontend contract, prioritize frontend compatibility unless explicitly instructed otherwise.
+- When working on backend migration tasks, prefer editing .NET projects (`JobHunter.Api`, `JobHunter.Application`, `JobHunter.Domain`, `JobHunter.Infrastructure`) and avoid unrelated frontend edits.
+
 ## Logging
 
 - Use ILogger<T> with structured fields.

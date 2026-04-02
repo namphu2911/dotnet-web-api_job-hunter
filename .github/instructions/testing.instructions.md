@@ -17,6 +17,13 @@ applyTo: "**/*.{cs,csproj,sln}"
 - Verify validation and error handling paths.
 - Verify route behavior and serialization assumptions.
 
+## Frontend Compatibility Checks (JobHunter)
+
+- For backend behavior changes, verify compatibility with `src/config/api.ts` and `src/types/backend.d.ts`.
+- Ensure response envelope fields expected by frontend remain present (`statusCode`, `message`, `error`, `data`).
+- Include coverage for auth/session flows that frontend depends on (`/api/v1/auth/login`, `/api/v1/auth/account`, `/api/v1/auth/refresh`, `/api/v1/auth/logout`).
+- If Java behavior and frontend expectations differ, test and preserve frontend-facing behavior unless explicitly requested otherwise.
+
 ## Quality Rules
 
 - Avoid brittle timing-dependent tests.

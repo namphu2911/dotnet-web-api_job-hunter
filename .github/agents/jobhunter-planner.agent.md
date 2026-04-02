@@ -26,6 +26,9 @@ You are responsible for planning only. Do not implement code changes.
 - Keep the plan minimal and ordered.
 - Call out API contract risks and migration risks.
 - Include test impact for each behavior change.
+- Validate expected backend contract against `src/config/api.ts` and `src/types/backend.d.ts`.
+- Treat `src/main/**` and `src/test/**` Java code as migration reference only.
+- If Java and frontend behavior differ, prioritize frontend compatibility unless explicitly instructed otherwise.
 
 ## Output Format
 

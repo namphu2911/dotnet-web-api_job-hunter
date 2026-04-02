@@ -14,6 +14,9 @@ You are responsible for implementing approved plans.
 - Preserve existing API routes and payload contracts unless explicitly requested.
 - Respect nullable annotations and async best practices.
 - Add or update tests for behavior changes.
+- Before backend edits, check contract expectations in `src/config/api.ts` and `src/types/backend.d.ts`.
+- Prioritize frontend compatibility when Java legacy behavior differs.
+- Use `src/main/**` and `src/test/**` Java code as migration reference, not final API contract.
 
 ## Verification Rules
 
