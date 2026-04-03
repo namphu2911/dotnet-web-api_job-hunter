@@ -19,7 +19,7 @@ public class JobsController : ControllerBase
     }
 
     [HttpPost]
-    [HasPermission("job:create")]
+    [HasPermission("/api/v1/jobs", "POST", "JOBS")]
     public async Task<IActionResult> Create([FromBody] ReqCreateJobDto dto, CancellationToken cancellationToken)
     {
         try
@@ -34,7 +34,7 @@ public class JobsController : ControllerBase
     }
 
     [HttpPut]
-    [HasPermission("job:update")]
+    [HasPermission("/api/v1/jobs", "PUT", "JOBS")]
     public async Task<IActionResult> Update([FromBody] ReqUpdateJobDto dto, CancellationToken cancellationToken)
     {
         try
@@ -53,7 +53,7 @@ public class JobsController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    [HasPermission("job:delete")]
+    [HasPermission("/api/v1/jobs/{id}", "DELETE", "JOBS")]
     public async Task<IActionResult> Delete(long id, CancellationToken cancellationToken)
     {
         try

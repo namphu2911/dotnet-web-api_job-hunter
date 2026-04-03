@@ -1,11 +1,13 @@
 using Microsoft.AspNetCore.Authorization;
+using JobHunter.Application.Utilities;
 
 namespace JobHunter.Api.Authorization;
 
 public sealed class HasPermissionAttribute : AuthorizeAttribute
 {
-    public HasPermissionAttribute(string permission)
+    public HasPermissionAttribute(string apiPath, string method, string module)
     {
-        Policy = $"{PermissionPolicyProvider.PermissionPolicyPrefix}{permission}";
+        var permissionValue = PermissionClaimValue.Encode(method, apiPath, module);
+        Policy = $"{PermissionPolicyProvider.PermissionPolicyPrefix}{permissionValue}";
     }
 }

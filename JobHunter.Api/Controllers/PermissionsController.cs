@@ -1,9 +1,9 @@
 using JobHunter.Application.Abstractions;
 using JobHunter.Application.Contracts;
 using JobHunter.Application.Contracts.Permissions;
+using JobHunter.Api.Authorization;
 using JobHunter.Api.Contracts;
 using JobHunter.Domain.Entities;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Threading;
@@ -23,7 +23,7 @@ namespace JobHunter.Api.Controllers
         }
 
         [HttpPost]
-        [Authorize]
+        [HasPermission("/api/v1/permissions", "POST", "PERMISSIONS")]
         public async Task<ActionResult<Permission>> Create([FromBody] ReqCreatePermissionDto dto, CancellationToken cancellationToken)
         {
             if (await _permissionService.ExistsByModuleApiPathMethodAsync(dto.Module, dto.ApiPath, dto.Method, cancellationToken))
@@ -35,6 +35,7 @@ namespace JobHunter.Api.Controllers
         }
 
         [HttpGet]
+        [HasPermission("/api/v1/permissions", "GET", "PERMISSIONS")]
         public async Task<ActionResult<ResultPaginationDto<Permission>>> GetAll([FromQuery] ListQueryParameters query, CancellationToken cancellationToken)
         {
             var permissions = await _permissionService.GetListAsync(query.Filter, query.ResolvePage(), query.ResolvePageSize(), query.Sort, cancellationToken);
@@ -42,7 +43,7 @@ namespace JobHunter.Api.Controllers
         }
 
         [HttpPut]
-        [Authorize]
+        [HasPermission("/api/v1/permissions", "PUT", "PERMISSIONS")]
         public async Task<ActionResult<Permission>> Update([FromBody] ReqUpdatePermissionDto dto, CancellationToken cancellationToken)
         {
             var permission = await _permissionService.UpdatePermissionAsync(dto, cancellationToken);
@@ -51,7 +52,7 @@ namespace JobHunter.Api.Controllers
         }
 
         [HttpDelete("{id}")]
-        [Authorize]
+        [HasPermission("/api/v1/permissions/{id}", "DELETE", "PERMISSIONS")]
         public async Task<IActionResult> Delete(long id, CancellationToken cancellationToken)
         {
             await _permissionService.DeletePermissionAsync(id, cancellationToken);
@@ -59,6 +60,7 @@ namespace JobHunter.Api.Controllers
         }
 
         [HttpGet("{id}")]
+        [HasPermission("/api/v1/permissions/{id}", "GET", "PERMISSIONS")]
         public async Task<ActionResult<Permission>> GetById(long id, CancellationToken cancellationToken)
         {
             var permission = await _permissionService.GetPermissionByIdAsync(id, cancellationToken);

@@ -20,7 +20,7 @@ public class SubscribersController : ControllerBase
     }
 
     [HttpPost]
-    [HasPermission("subscriber:create")]
+    [HasPermission("/api/v1/subscribers", "POST", "SUBSCRIBERS")]
     public async Task<IActionResult> Create([FromBody] ReqCreateSubscriberDto dto, CancellationToken cancellationToken)
     {
         try
@@ -54,7 +54,7 @@ public class SubscribersController : ControllerBase
     }
 
     [HttpPut]
-    [HasPermission("subscriber:update")]
+    [HasPermission("/api/v1/subscribers", "PUT", "SUBSCRIBERS")]
     public async Task<IActionResult> Update([FromBody] ReqUpdateSubscriberDto dto, CancellationToken cancellationToken)
     {
         try
@@ -73,7 +73,7 @@ public class SubscribersController : ControllerBase
     }
 
     [HttpDelete("{id:long}")]
-    [Authorize]
+    [HasPermission("/api/v1/subscribers/{id}", "DELETE", "SUBSCRIBERS")]
     public async Task<IActionResult> Delete([FromRoute] long id, CancellationToken cancellationToken)
     {
         try

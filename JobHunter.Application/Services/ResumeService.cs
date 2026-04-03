@@ -42,8 +42,8 @@ public class ResumeService : IResumeService
             Email = dto.Email,
             Url = dto.Url,
             Status = st,
-            User = user,
-            Job = job
+            UserId = userId,
+            JobId = jobId
         };
         await _resumeRepository.AddAsync(resume, cancellationToken);
         return new ResCreateResumeDto

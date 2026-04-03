@@ -25,7 +25,7 @@ public sealed class UserRepository : IUserRepository
     {
         return await _dbContext.Users
             .Include(u => u.Role)
-            .ThenInclude(r => r.Permissions)
+            .ThenInclude(r => r!.Permissions)
             .FirstOrDefaultAsync(x => x.Email == email, cancellationToken);
     }
 
@@ -130,17 +130,23 @@ public sealed class UserRepository : IUserRepository
 
     public async Task<User?> GetByRefreshTokenAndEmailAsync(string token, string email, CancellationToken cancellationToken = default)
     {
-        return await _dbContext.Users.FirstOrDefaultAsync(x =>
-            x.Email == email &&
-            x.RefreshToken == token,
-            cancellationToken);
+        return await _dbContext.Users
+            .Include(u => u.Role)
+            .ThenInclude(r => r!.Permissions)
+            .FirstOrDefaultAsync(x =>
+                x.Email == email &&
+                x.RefreshToken == token,
+                cancellationToken);
     }
 
     public async Task<User?> GetByRefreshTokenAsync(string token, CancellationToken cancellationToken = default)
     {
-        return await _dbContext.Users.FirstOrDefaultAsync(x =>
-            x.RefreshToken == token,
-            cancellationToken);
+        return await _dbContext.Users
+            .Include(u => u.Role)
+            .ThenInclude(r => r!.Permissions)
+            .FirstOrDefaultAsync(x =>
+                x.RefreshToken == token,
+                cancellationToken);
     }
 
     public async Task UpdateRefreshTokenAsync(string email, string? refreshToken, CancellationToken cancellationToken = default)

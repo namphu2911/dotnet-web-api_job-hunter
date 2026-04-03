@@ -31,10 +31,10 @@ public sealed class PermissionPolicyProvider : IAuthorizationPolicyProvider
             return _fallbackPolicyProvider.GetPolicyAsync(policyName);
         }
 
-        var permission = policyName[PermissionPolicyPrefix.Length..].Trim();
+        var permissionValue = policyName[PermissionPolicyPrefix.Length..].Trim();
         var policy = new AuthorizationPolicyBuilder()
             .RequireAuthenticatedUser()
-            .AddRequirements(new PermissionRequirement(permission))
+            .AddRequirements(new PermissionRequirement(permissionValue))
             .Build();
 
         return Task.FromResult<AuthorizationPolicy?>(policy);

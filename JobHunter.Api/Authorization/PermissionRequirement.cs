@@ -4,10 +4,10 @@ namespace JobHunter.Api.Authorization;
 
 public sealed class PermissionRequirement : IAuthorizationRequirement
 {
-    public PermissionRequirement(string permission)
+    public PermissionRequirement(string permissionValue)
     {
-        Permission = permission;
+        PermissionValue = permissionValue;
     }
 
-    public string Permission { get; }
+    public string PermissionValue { get; }
 }

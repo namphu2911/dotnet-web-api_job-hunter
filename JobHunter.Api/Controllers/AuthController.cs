@@ -2,6 +2,7 @@ using JobHunter.Application.Abstractions;
 using JobHunter.Application.Contracts.Auth;
 using JobHunter.Application.Contracts.Users;
 using JobHunter.Api.Attributes;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace JobHunter.Api.Controllers;
@@ -34,6 +35,7 @@ public sealed class AuthController : ControllerBase
     }
 
     [HttpGet("account")]
+    [Authorize]
     [ApiMessage("Fetch account information")]
     [ProducesResponseType(typeof(ResLoginDto.UserGetAccountDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -63,6 +65,7 @@ public sealed class AuthController : ControllerBase
     }
 
     [HttpPost("logout")]
+    [Authorize]
     [ApiMessage("Logout successfully")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<ActionResult> Logout(CancellationToken cancellationToken)
@@ -92,6 +95,7 @@ public sealed class AuthController : ControllerBase
     }
 
     [HttpPost("change-password")]
+    [Authorize]
     [ApiMessage("Change password successfully")]
     [ProducesResponseType(typeof(ResLoginDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]

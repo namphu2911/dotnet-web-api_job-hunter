@@ -2,6 +2,7 @@ using JobHunter.Application.Abstractions;
 using JobHunter.Application.Contracts.Auth;
 using JobHunter.Application.Contracts.Users;
 using JobHunter.Application.Services.Security;
+using JobHunter.Application.Utilities;
 using JobHunter.Domain.Repositories;
 
 namespace JobHunter.Application.Services;
@@ -190,7 +191,8 @@ public sealed class AuthService : IAuthService
         // Otherwise, return permissions from role
         if (user.Role?.Permissions != null && user.Role.Permissions.Count > 0)
         {
-            return user.Role.Permissions.Select(p => p.ApiPath?.Trim() ?? string.Empty)
+            return user.Role.Permissions
+                .Select(p => PermissionClaimValue.Encode(p.Method, p.ApiPath, p.Module))
                 .Where(s => !string.IsNullOrEmpty(s))
                 .Distinct()
                 .ToArray();

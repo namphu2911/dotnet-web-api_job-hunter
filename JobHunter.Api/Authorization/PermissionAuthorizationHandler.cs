@@ -7,7 +7,9 @@ public sealed class PermissionAuthorizationHandler : AuthorizationHandler<Permis
     protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, PermissionRequirement requirement)
     {
         var hasWildcard = context.User.Claims.Any(c => c.Type == "permission" && c.Value == "*");
-        var hasPermission = context.User.Claims.Any(c => c.Type == "permission" && c.Value == requirement.Permission);
+        var hasPermission = context.User.Claims.Any(c =>
+            c.Type == "permission" &&
+            string.Equals(c.Value, requirement.PermissionValue, StringComparison.Ordinal));
 
         if (hasWildcard || hasPermission)
         {

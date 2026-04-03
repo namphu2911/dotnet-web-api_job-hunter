@@ -1,6 +1,7 @@
 using JobHunter.Application.Abstractions;
 using JobHunter.Application.Contracts;
 using JobHunter.Application.Contracts.Users;
+using JobHunter.Api.Authorization;
 using JobHunter.Api.Contracts;
 using JobHunter.Api.Attributes;
 using Microsoft.AspNetCore.Mvc;
@@ -19,6 +20,7 @@ public sealed class UsersController : ControllerBase
     }
 
     [HttpPost]
+    [HasPermission("/api/v1/users", "POST", "USERS")]
     [ApiMessage("Create user successfully")]
     [ProducesResponseType(typeof(ResCreateUserDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
@@ -36,6 +38,7 @@ public sealed class UsersController : ControllerBase
     }
 
     [HttpDelete("{id:long}")]
+    [HasPermission("/api/v1/users/{id}", "DELETE", "USERS")]
     [ApiMessage("Delete user successfully")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -46,6 +49,7 @@ public sealed class UsersController : ControllerBase
     }
 
     [HttpGet("{id:long}")]
+    [HasPermission("/api/v1/users/{id}", "GET", "USERS")]
     [ApiMessage("Fetch user successfully")]
     [ProducesResponseType(typeof(ResUserDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -56,6 +60,7 @@ public sealed class UsersController : ControllerBase
     }
 
     [HttpGet]
+    [HasPermission("/api/v1/users", "GET", "USERS")]
     [ApiMessage("Fetch users successfully")]
     [ProducesResponseType(typeof(ResultPaginationDto<ResUserDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ResultPaginationDto<ResUserDto>>> GetUsers([FromQuery] ListQueryParameters query, CancellationToken cancellationToken = default)
@@ -65,6 +70,7 @@ public sealed class UsersController : ControllerBase
     }
 
     [HttpPut]
+    [HasPermission("/api/v1/users", "PUT", "USERS")]
     [ApiMessage("Update user successfully")]
     [ProducesResponseType(typeof(ResUpdateUserDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]

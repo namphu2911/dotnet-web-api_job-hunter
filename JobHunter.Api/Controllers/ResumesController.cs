@@ -19,7 +19,7 @@ public class ResumesController : ControllerBase
     }
 
     [HttpPost]
-    [HasPermission("resume:create")]
+    [HasPermission("/api/v1/resumes", "POST", "RESUMES")]
     public async Task<IActionResult> Create([FromBody] ReqCreateResumeDto dto, CancellationToken cancellationToken)
     {
         try
@@ -34,7 +34,7 @@ public class ResumesController : ControllerBase
     }
 
     [HttpPut]
-    [HasPermission("resume:update")]
+    [HasPermission("/api/v1/resumes", "PUT", "RESUMES")]
     public async Task<IActionResult> Update([FromBody] ReqUpdateResumeDto dto, CancellationToken cancellationToken)
     {
         try
@@ -53,7 +53,7 @@ public class ResumesController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    [HasPermission("resume:delete")]
+    [HasPermission("/api/v1/resumes/{id}", "DELETE", "RESUMES")]
     public async Task<IActionResult> Delete(long id, CancellationToken cancellationToken)
     {
         try

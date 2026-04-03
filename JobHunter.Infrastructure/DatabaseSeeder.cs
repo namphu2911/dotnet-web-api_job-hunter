@@ -1,6 +1,7 @@
 using JobHunter.Domain.Entities;
 using JobHunter.Domain.Enums;
 using JobHunter.Domain.Repositories;
+using JobHunter.Application.Services.Security;
 using JobHunter.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -110,12 +111,28 @@ public class DatabaseSeeder : IHostedService
                 Age = 25,
                 Gender = Gender.MALE,
                 Name = "I'm super admin",
-                Password = "123456", // TODO: Hash in production
+                Password = PasswordSecurity.HashPassword("123456"),
                 Role = adminRole!
             };
             await db.Users.AddAsync(adminUser, cancellationToken);
             await db.SaveChangesAsync(cancellationToken);
             _logger.LogInformation("Seeded admin user");
+        }
+
+        // Backward compatibility: migrate legacy plaintext passwords seeded previously.
+        var usersWithPlaintextPassword = await db.Users
+            .Where(x => x.Password != null && x.Password != string.Empty && !EF.Functions.Like(x.Password, "$2%"))
+            .ToListAsync(cancellationToken);
+
+        if (usersWithPlaintextPassword.Count > 0)
+        {
+            foreach (var user in usersWithPlaintextPassword)
+            {
+                user.Password = PasswordSecurity.HashPassword(user.Password);
+            }
+
+            await db.SaveChangesAsync(cancellationToken);
+            _logger.LogInformation("Migrated {Count} legacy plaintext passwords to BCrypt", usersWithPlaintextPassword.Count);
         }
     }
 

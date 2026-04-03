@@ -1,6 +1,6 @@
 namespace JobHunter.Application.Services.Security;
 
-internal static class PasswordSecurity
+public static class PasswordSecurity
 {
     private const int WorkFactor = 12;
 
