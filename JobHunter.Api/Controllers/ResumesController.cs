@@ -1,6 +1,7 @@
 using JobHunter.Application.Abstractions;
 using JobHunter.Application.Contracts.Resumes;
 using JobHunter.Api.Contracts;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using JobHunter.Api.Authorization;
@@ -89,10 +90,10 @@ public class ResumesController : ControllerBase
     [Authorize]
     public async Task<IActionResult> GetByUser([FromQuery] ListQueryParameters query, CancellationToken cancellationToken = default)
     {
-        // Extract userId from claims (assume sub claim is userId)
-        var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "sub" || c.Type.EndsWith("/nameidentifier"));
-        if (userIdClaim == null || !long.TryParse(userIdClaim.Value, out var userId))
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrWhiteSpace(userIdClaim) || !long.TryParse(userIdClaim, out var userId))
             return Unauthorized(new { message = "User ID not found in token" });
+
         var result = await _resumeService.GetByUserAsync(userId, query.ResolvePage(), query.ResolvePageSize(), query.Sort, cancellationToken);
         return Ok(result);
     }
