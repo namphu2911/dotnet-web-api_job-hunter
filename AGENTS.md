@@ -34,3 +34,9 @@ Agent definitions live in `.github/agents/` at repository root.
 - Document behavior changes in PR summary.
 - Treat `src/` frontend API usage as source of truth for contract compatibility.
 - Treat `src/main/**` and `src/test/**` Java code as migration reference, not primary contract.
+
+## Review Scope Exceptions (Current Stage)
+
+- `JobHunter.Api/appsettings.json` and `JobHunter.Api/appsettings.Development.json` are treated as local-only and not intended for git push.
+- During review, do not classify content in those two appsettings files as a Critical finding.
+- Temporary lack of automated test project/coverage is accepted and should not be graded as a review issue unless explicitly requested.

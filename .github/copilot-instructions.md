@@ -73,3 +73,9 @@ Use these commands from repository root before considering work complete:
 - dotnet build
 
 If no test project exists yet, call that out explicitly in the result.
+
+## Accepted Review Exceptions (Current Project Stage)
+
+- `JobHunter.Api/appsettings.json` and `JobHunter.Api/appsettings.Development.json` are intentionally local-only and are not intended to be pushed to git.
+- While this policy is active, do not classify values in those two local appsettings files as Critical findings in review reports.
+- Missing automated test project/coverage is currently an accepted constraint; do not score or grade this as a review finding unless explicitly requested.

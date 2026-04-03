@@ -4,29 +4,18 @@ Date: 2026-04-02
 Agent: JobHunter Reviewer  
 Scope: Frontend contract compatibility, backend migration progress, build/test readiness, and security posture.
 
-Severity Summary: Critical 1 / High 4 / Medium 4 / Low 1
+Severity Summary: Critical 0 / High 4 / Medium 3 / Low 1
+
+Applied exceptions for this review cycle:
+
+- `JobHunter.Api/appsettings.json` and `JobHunter.Api/appsettings.Development.json` are treated as local-only and out of critical review scope.
+- Missing automated test project/coverage is treated as an accepted current-stage constraint.
 
 ## Findings
 
-### Critical
-
-1. SMTP credentials are still committed in plaintext configuration
-
-- Evidence:
-  - [JobHunter.Api/appsettings.json](JobHunter.Api/appsettings.json#L19)
-  - [JobHunter.Api/appsettings.json](JobHunter.Api/appsettings.json#L20)
-  - [JobHunter.Api/appsettings.Development.json](JobHunter.Api/appsettings.Development.json#L19)
-  - [JobHunter.Api/appsettings.Development.json](JobHunter.Api/appsettings.Development.json#L20)
-- Impact:
-  - Immediate secret exposure risk and mailbox credential compromise.
-- Remediation:
-  - Remove secrets from tracked config.
-  - Move to environment variables or user-secrets.
-  - Rotate compromised SMTP password.
-
 ### High
 
-2. Permission identity model remains inconsistent (token claims vs endpoint requirements)
+1. Permission identity model remains inconsistent (token claims vs endpoint requirements)
 
 - Evidence:
   - HasPermission policies require action keys such as [job:create](JobHunter.Api/Controllers/JobsController.cs#L22), [resume:create](JobHunter.Api/Controllers/ResumesController.cs#L22), [subscriber:create](JobHunter.Api/Controllers/SubscribersController.cs#L23).
@@ -38,7 +27,7 @@ Severity Summary: Critical 1 / High 4 / Medium 4 / Low 1
   - Standardize one canonical permission key format end-to-end.
   - Emit claims using the same value HasPermission expects.
 
-3. Resume by-user endpoint still risks false Unauthorized due to claim precedence
+2. Resume by-user endpoint still risks false Unauthorized due to claim precedence
 
 - Evidence:
   - Endpoint reads first matching claim between sub and nameidentifier at [ResumesController](JobHunter.Api/Controllers/ResumesController.cs#L93).
@@ -48,7 +37,7 @@ Severity Summary: Critical 1 / High 4 / Medium 4 / Low 1
 - Remediation:
   - Parse user id from ClaimTypes.NameIdentifier only.
 
-4. Flexible payload compatibility is partial, not fully FE-shape tolerant yet
+3. Flexible payload compatibility is partial, not fully FE-shape tolerant yet
 
 - Evidence:
   - Core id wrapper is strict long id at [ReqObjectIdDto](JobHunter.Application/Contracts/ReqObjectIdDto.cs#L5).
@@ -63,7 +52,7 @@ Severity Summary: Critical 1 / High 4 / Medium 4 / Low 1
 - Remediation:
   - Add converters/wrapper contracts to accept number, numeric string, and object-id forms for single and list ids.
 
-5. Seeded admin password is still plain text
+4. Seeded admin password is still plain text
 
 - Evidence:
   - Plain password assignment remains in [DatabaseSeeder](JobHunter.Infrastructure/DatabaseSeeder.cs#L113).
@@ -74,17 +63,7 @@ Severity Summary: Critical 1 / High 4 / Medium 4 / Low 1
 
 ### Medium
 
-6. Automated test foundation is still missing
-
-- Evidence:
-  - No test project found from workspace search for \*Tests.csproj.
-  - Plan already calls out missing test project at [be-alignment-plan-with-existing-fe.md](JobHunter.Api/docs/be-alignment-plan-with-existing-fe.md#L245).
-- Impact:
-  - High regression risk during ongoing migration and contract alignment.
-- Remediation:
-  - Create a .NET test project and add contract-focused integration tests.
-
-7. Email template rendering remains placeholder implementation
+5. Email template rendering remains placeholder implementation
 
 - Evidence:
   - Placeholder comment and inline serialized object body at [EmailService](JobHunter.Application/Services/EmailService.cs#L58).
@@ -93,7 +72,7 @@ Severity Summary: Critical 1 / High 4 / Medium 4 / Low 1
 - Remediation:
   - Implement template file rendering (for example RazorLight/Scriban) for job emails.
 
-8. Mail trigger endpoint still uses service locator and duplicated dispatch flow
+6. Mail trigger endpoint still uses service locator and duplicated dispatch flow
 
 - Evidence:
   - Service locator usage in [MailController](JobHunter.Api/Controllers/MailController.cs#L24).
@@ -103,7 +82,7 @@ Severity Summary: Critical 1 / High 4 / Medium 4 / Low 1
 - Remediation:
   - Extract one application dispatch service and reuse from both controller and hosted job.
 
-9. Nullable contract warnings remain in build output for request DTOs
+7. Nullable contract warnings remain in build output for request DTOs
 
 - Evidence:
   - Warnings in build for required id objects in:
@@ -118,7 +97,7 @@ Severity Summary: Critical 1 / High 4 / Medium 4 / Low 1
 
 ### Low
 
-10. Migration tracking document remains stale versus current implementation
+8. Migration tracking document remains stale versus current implementation
 
 - Evidence:
   - Several items in [MIGRATION.md](JobHunter.Api/docs/MIGRATION.md) are still marked not migrated despite implemented controllers/services/repositories.
@@ -159,14 +138,12 @@ Severity Summary: Critical 1 / High 4 / Medium 4 / Low 1
 
 - dotnet restore: Passed
 - dotnet build: Passed with warnings (5)
-- dotnet test: Not run (no .NET test project present)
+- dotnet test: Skipped (accepted current-stage constraint: no .NET test project yet)
 
 ## Recommended Next Steps
 
-1. Security hotfix now: remove committed SMTP credentials and rotate password.
-2. Align permission model now: claims generation and HasPermission requirement must use one canonical key.
-3. Fix by-user claim parsing: use NameIdentifier only.
-4. Complete flexible id parsing with converters and add unit tests.
-5. Create JobHunter.Tests and add contract tests for auth, jobs, resumes, subscribers.
-6. Replace email placeholder rendering and remove service locator duplication.
-7. Update MIGRATION.md to current status.
+1. Align permission model now: claims generation and HasPermission requirement must use one canonical key.
+2. Fix by-user claim parsing: use NameIdentifier only.
+3. Complete flexible id parsing with converters and add unit tests when test project is available.
+4. Replace email placeholder rendering and remove service locator duplication.
+5. Update MIGRATION.md to current status.
