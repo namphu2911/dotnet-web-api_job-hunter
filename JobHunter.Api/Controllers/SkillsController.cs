@@ -3,6 +3,7 @@ using JobHunter.Application.Contracts;
 using JobHunter.Application.Contracts.Skills;
 using JobHunter.Api.Contracts;
 using JobHunter.Domain.Entities;
+using JobHunter.Api.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
@@ -23,7 +24,7 @@ namespace JobHunter.Api.Controllers
         }
 
         [HttpPost]
-        [Authorize]
+        [HasPermission("/api/v1/skills", "POST", "SKILLS")]
         public async Task<ActionResult<Skill>> Create([FromBody] ReqCreateSkillDto dto, CancellationToken cancellationToken)
         {
             if (await _skillService.ExistsByNameAsync(dto.Name, cancellationToken))
@@ -42,7 +43,7 @@ namespace JobHunter.Api.Controllers
         }
 
         [HttpPut]
-        [Authorize]
+        [HasPermission("/api/v1/skills", "PUT", "SKILLS")]
         public async Task<ActionResult<Skill>> Update([FromBody] ReqUpdateSkillDto dto, CancellationToken cancellationToken)
         {
             var skill = await _skillService.UpdateSkillAsync(dto, cancellationToken);
@@ -51,7 +52,7 @@ namespace JobHunter.Api.Controllers
         }
 
         [HttpDelete("{id}")]
-        [Authorize]
+        [HasPermission("/api/v1/skills/{id}", "DELETE", "SKILLS")]
         public async Task<IActionResult> Delete(long id, CancellationToken cancellationToken)
         {
             await _skillService.DeleteSkillAsync(id, cancellationToken);

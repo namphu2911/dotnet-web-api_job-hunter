@@ -3,6 +3,7 @@ using JobHunter.Application.Contracts;
 using JobHunter.Application.Contracts.Companies;
 using JobHunter.Api.Contracts;
 using JobHunter.Domain.Entities;
+using JobHunter.Api.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
@@ -23,7 +24,7 @@ namespace JobHunter.Api.Controllers
         }
 
         [HttpPost]
-        [Authorize]
+        [HasPermission("/api/v1/companies", "POST", "COMPANIES")]
         public async Task<ActionResult<Company>> Create([FromBody] ReqCreateCompanyDto dto, CancellationToken cancellationToken)
         {
             var company = await _companyService.CreateCompanyAsync(dto, cancellationToken);
@@ -38,7 +39,7 @@ namespace JobHunter.Api.Controllers
         }
 
         [HttpPut]
-        [Authorize]
+        [HasPermission("/api/v1/companies", "PUT", "COMPANIES")]
         public async Task<ActionResult<Company>> Update([FromBody] ReqUpdateCompanyDto dto, CancellationToken cancellationToken)
         {
             var company = await _companyService.UpdateCompanyAsync(dto, cancellationToken);
@@ -47,7 +48,7 @@ namespace JobHunter.Api.Controllers
         }
 
         [HttpDelete("{id}")]
-        [Authorize]
+        [HasPermission("/api/v1/companies/{id}", "DELETE", "COMPANIES")]
         public async Task<IActionResult> Delete(long id, CancellationToken cancellationToken)
         {
             await _companyService.DeleteCompanyAsync(id, cancellationToken);

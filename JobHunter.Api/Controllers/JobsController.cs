@@ -68,7 +68,6 @@ public class JobsController : ControllerBase
     }
 
     [HttpGet("{id}")]
-    [Authorize]
     public async Task<IActionResult> GetById(long id, CancellationToken cancellationToken)
     {
         var result = await _jobService.GetByIdAsync(id, cancellationToken);
@@ -78,7 +77,6 @@ public class JobsController : ControllerBase
     }
 
     [HttpGet]
-    [Authorize]
     public async Task<IActionResult> GetList([FromQuery] ListQueryParameters query, CancellationToken cancellationToken = default)
     {
         var result = await _jobService.GetListAsync(query.Filter, query.ResolvePage(), query.ResolvePageSize(), query.Sort, cancellationToken);

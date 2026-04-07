@@ -16,7 +16,7 @@ public class MailController : ControllerBase
     }
 
     [HttpGet]
-    [Authorize]
+    [AllowAnonymous]
     public async Task<IActionResult> TriggerJobEmails(CancellationToken cancellationToken)
     {
         var sent = await _jobEmailDispatchService.DispatchAsync(cancellationToken);
